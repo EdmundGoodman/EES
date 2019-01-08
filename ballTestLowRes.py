@@ -8,32 +8,34 @@ import time
 from picamera import PiCamera
 
 
-def getImage():
+def getImage(save=False):
     stream = io.BytesIO()
     with PiCamera() as camera:
-        camera.resolution = (640, 480)
+        camera.resolution = (480, 360)
         camera.start_preview()
         time.sleep(5)
         camera.capture(stream, "jpeg")
     data = np.fromstring(stream.getvalue(), dtype=np.uint8)
     image = cv2.imdecode(data, 1)
-##    image = image[:,:,::-1]
+    if save:
+        cv2.imwrite('circle.jpg', image)
     return image
 
 
 def main():
-##    img = cv2.imread('circle.jpg',0)
+
 
 
     prevTurn = 0
     while True:
-        img = getImage()
+##        img = getImage(save=True)
+        img = cv2.imread('circle.jpg')
         imgDimensions = img.shape
         imgVerticalCentre = int(img.shape[1]/2)
         
         imgVerticalCentre += prevTurn
         x = time.time()
-        turn = turnToBall(img, imgVerticalCentre, turnSize=10, display=False)
+        turn = turnToBall(img, imgVerticalCentre, turnSize=10, display=True)
         print(time.time()-x)
         if turn != prevTurn and prevTurn != 0:
             break
@@ -51,8 +53,35 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
 
     imgDimensions = img.shape
     cimg = img
+    
+##    Increase the colour contrast
+    
+    clahe = cv2.createCLAHE(clipLimit=3, tileGridSize=(8,8))
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l,a,b = cv2.split(lab)
+    l2 = clahe.apply(l)
+    lab = cv2.merge((l2,a,b))
+    img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
+
+    if display:
+        cv2.imshow('clahe circles',img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        
+    '''##    Mask for red
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    lower_red = np.array([30,150,50])
+    upper_red = np.array([255,255,120])
+    mask = cv2.inRange(img, lower_red, upper_red)
+    res = cv2.bitwise_and(img, img, mask=mask)
+    img = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
+    if display:
+        cv2.imshow('masked circles',img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()'''
+    
+    
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-##    cimg = img
 
     if display:
         cv2.imshow('initial circles',img)
@@ -63,17 +92,39 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
     #Perform signal operations on the image to make it easier to analyses
 
     #img = cv2.equalizeHist(img) #Increase saturation of the image
-    gray_blur = cv2.medianBlur(img, 7)  # Remove noise before laplacian
-    gray_lap = cv2.Laplacian(gray_blur, cv2.CV_8UC1, ksize=5)
-    dilate_lap = cv2.dilate(gray_lap, (3, 3))  # Fill in gaps from blurring. This helps to detect circles with broken edges.
-    lap_blur = cv2.bilateralFilter(dilate_lap, 5, 9, 9) # Furthur remove noise introduced by laplacian. This removes false pos in space between the two groups of circles.
-    out_blur = cv2.medianBlur(lap_blur, 5) # Further blur noise from laplacian
-    img = out_blur
-
+    gray_blur = cv2.medianBlur(img, 13)  # Remove noise before laplacian
     if display:
-        cv2.imshow('processed circles',img)
+        cv2.imshow('gray_blur circles',gray_blur)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+        
+    gray_lap = cv2.Laplacian(gray_blur, cv2.CV_8UC1, ksize=5)
+    if display:
+        cv2.imshow('gray_lap circles',gray_lap)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        
+    '''dilate_lap = cv2.dilate(gray_lap, (10, 10))  # Fill in gaps from blurring. This helps to detect circles with broken edges.
+    if display:
+        cv2.imshow('dilate_lap circles',dilate_lap)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        
+    lap_blur = cv2.bilateralFilter(dilate_lap, 5, 9, 9) # Furthur remove noise introduced by laplacian. This removes false pos in space between the two groups of circles.
+    if display:
+        cv2.imshow('lap_blur circles',lap_blur)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()'''
+    
+    lap_blur = gray_lap
+    
+    out_blur = cv2.medianBlur(lap_blur, 3) # Further blur noise from laplacian
+    if display:
+        cv2.imshow('processed circles',out_blur)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    img = out_blur
 
 
     #https://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=houghcircles
@@ -85,9 +136,9 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         dp=1, #Inverse ratio of the accumulator resolution to the image resolution
         minDist=100, #Minimum distance between the centers of the detected circles
         param1=50, #the higher threshold of the two passed to the Canny() edge detector
-        param2=90, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
+        param2=80, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
         minRadius=10,
-        maxRadius=150,
+        maxRadius=110,
     )
 
     if circles is None:
@@ -110,11 +161,8 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         cv2.destroyAllWindows()
 
     closestCircle = circles[0]
-    xCentralDisplacement = imgVerticalCentre - closestCircle[0]
-    if xCentralDisplacement < 0:
-        return xCentralDisplacement #turnSize
-    else:
-        return xCentralDisplacement #-1*turnSize
+    xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
+    return xCentralDisplacement
 
 
 main()
