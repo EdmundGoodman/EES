@@ -100,10 +100,13 @@ class Robot:
 
 
 def main():
-    robot = Robot()
-    atexit.register(robot.shutdown)
+    #robot = Robot()
+    #atexit.register(robot.shutdown)
 
-    robot.remoteControl()
+    #robot.remoteControl()
+
+
+
 
 if __name__ == "__main__":
     exit(main())
