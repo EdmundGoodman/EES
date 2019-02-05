@@ -8,18 +8,11 @@ import math
 import io
 
 
-#Pi only libraries
-try:
-    import pigpiod
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
 
-    import RPi.GPIO as GPIO
-    GPIO.setmode(GPIO.BCM)
+from picamera import PiCamera
 
-    from picamera import PiCamera
-
-    piOnlyLibraries = True
-except ImportError:
-    piOnlyLibraries = False
 
 
 
@@ -41,10 +34,10 @@ class Robot:
 
     def remoteControl(self):
         while True:
-            direction = input("Direction [aswd]: ").lower()
+            direction = raw_input("Direction [aswd]: ").lower()
             directionFuncs = [self.turnLeft, self.backward, self.forward, self.turnRight]
             directionFuncs["aswd".index(direction)]()
-            time.sleep(1)
+            sleep(1)
             self.stop()
 
     def toggleGPIOPins(self, highPins, lowPins):
@@ -72,7 +65,7 @@ class Robot:
     def stop(self):
         self.toggleGPIOPins(highPins=list(range(14,20))+[8,11], lowPins=[])
 
-    def setFlyWheelSpeed(self):
+    def setFlyWheelSpeed(self, speed):
         pass
 
     def takePhoto(self):
@@ -170,7 +163,7 @@ def main():
     robot = Robot()
     atexit.register(robot.shutdown)
 
-    #robot.remoteControl()
+    robot.remoteControl()
     robot.turnToBall()
 
 if __name__ == "__main__":
