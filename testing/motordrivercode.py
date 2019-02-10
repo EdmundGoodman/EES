@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 PIN = 18
-PWMA1 = 6 
+PWMA1 = 6
 PWMA2 = 13
 PWMB1 = 20
 PWMB2 = 21
@@ -69,12 +69,12 @@ def getkey():
 			while GPIO.input(PIN) == 0 and count < 15:    #0.56ms
 				count += 1
 				time.sleep(0.00006)
-				
+
 			count = 0
 			while GPIO.input(PIN) == 1 and count < 40:   #0: 0.56ms
 				count += 1                               #1: 1.69ms
 				time.sleep(0.00006)
-				
+
 			if count > 8:
 				data[idx] |= 1<<cnt
 			if cnt == 7:
@@ -105,7 +105,7 @@ try:
 				right()
 				print("right")
 			if key == 0x52:
-				reverse()		
+				reverse()
 				print("reverse")
 			if key == 0x15:
 				if(PWM + 10 < 101):
@@ -121,5 +121,3 @@ try:
 					print(PWM)
 except KeyboardInterrupt:
 	GPIO.cleanup();
-
-

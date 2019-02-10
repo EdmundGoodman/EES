@@ -14,8 +14,6 @@ GPIO.setmode(GPIO.BCM)
 from picamera import PiCamera
 
 
-
-
 class Robot:
     def __init__(self):
         self.setup()
@@ -26,6 +24,11 @@ class Robot:
         GPIO.setup(8,GPIO.OUT,initial=1)
         GPIO.setup(11, GPIO.OUT,initial=1)
 
+        self._servoPin1 = GPIO.PWM(17, 50) #Pin, Hz
+        self._servoPin2 = GPIO.PWM(18, 50)
+        self._servoPin1.start(0)
+        self._servoPin2.start(0)
+
     def shutdown(self):
         self.stop()
         self.setFlyWheelSpeed(0)
@@ -33,12 +36,24 @@ class Robot:
         print("Process Safely Stopped")
 
     def remoteControl(self):
-        while True:
-            direction = raw_input("Direction [aswd]: ").lower()
-            directionFuncs = [self.turnLeft, self.backward, self.forward, self.turnRight]
-            directionFuncs["aswd".index(direction)]()
-            sleep(1)
-            self.stop()
+        from pynput.keyboard import Key, Listener
+        def on_press(key):
+        	if key == Key.down:
+        		self.backward()
+        	if key == Key.up:
+        		self.forward()
+        	if key == Key.right:
+        		robot.turnRight()
+        	if key == Key.left:
+        		robot.turnLeft()
+
+        def on_release(key):
+        	robot.Stop()
+        	if key == Key.esc:
+         		return False
+
+        with Listener(on_press=on_press,on_release=on_release) as listener:
+        		listener.join()
 
     def toggleGPIOPins(self, highPins, lowPins):
         for p in highPins:
@@ -66,7 +81,9 @@ class Robot:
         self.toggleGPIOPins(highPins=list(range(14,20))+[8,11], lowPins=[])
 
     def setFlyWheelSpeed(self, speed):
-        pass
+        self._servoPin1.ChangeDutyCycle(speed)
+        self._servoPin2.ChangeDutyCycle(speed)
+
 
     def takePhoto(self):
         stream = io.BytesIO()

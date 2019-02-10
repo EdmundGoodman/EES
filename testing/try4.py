@@ -8,4 +8,3 @@ GPIO.output(L1, GPIO.LOW)
 
 sleep(10)
 GPIO.cleanup()
-
