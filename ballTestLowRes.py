@@ -32,7 +32,7 @@ def main():
         img = cv2.imread('circle.jpg')
         imgDimensions = img.shape
         imgVerticalCentre = int(img.shape[1]/2)
-        
+
         imgVerticalCentre += prevTurn
         x = time.time()
         turn = turnToBall(img, imgVerticalCentre, turnSize=10, display=True)
@@ -53,9 +53,9 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
 
     imgDimensions = img.shape
     cimg = img
-    
+
 ##    Increase the colour contrast
-    
+
     clahe = cv2.createCLAHE(clipLimit=3, tileGridSize=(8,8))
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l,a,b = cv2.split(lab)
@@ -67,7 +67,7 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         cv2.imshow('clahe circles',img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        
+
     '''##    Mask for red
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     lower_red = np.array([30,150,50])
@@ -79,8 +79,8 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         cv2.imshow('masked circles',img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()'''
-    
-    
+
+
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     if display:
@@ -97,27 +97,27 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         cv2.imshow('gray_blur circles',gray_blur)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        
+
     gray_lap = cv2.Laplacian(gray_blur, cv2.CV_8UC1, ksize=5)
     if display:
         cv2.imshow('gray_lap circles',gray_lap)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        
+
     '''dilate_lap = cv2.dilate(gray_lap, (10, 10))  # Fill in gaps from blurring. This helps to detect circles with broken edges.
     if display:
         cv2.imshow('dilate_lap circles',dilate_lap)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        
+
     lap_blur = cv2.bilateralFilter(dilate_lap, 5, 9, 9) # Furthur remove noise introduced by laplacian. This removes false pos in space between the two groups of circles.
     if display:
         cv2.imshow('lap_blur circles',lap_blur)
         cv2.waitKey(0)
         cv2.destroyAllWindows()'''
-    
+
     lap_blur = gray_lap
-    
+
     out_blur = cv2.medianBlur(lap_blur, 3) # Further blur noise from laplacian
     if display:
         cv2.imshow('processed circles',out_blur)
