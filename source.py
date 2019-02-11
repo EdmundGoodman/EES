@@ -6,7 +6,8 @@ import numpy as np
 from PIL import Image
 import math
 import io
-
+from ESCD2in import *
+import ESCD2in
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
@@ -23,20 +24,15 @@ class Robot:
             GPIO.setup(i,GPIO.OUT,initial=1)
         GPIO.setup(8,GPIO.OUT,initial=1)
         GPIO.setup(11, GPIO.OUT,initial=1)
-
-        self._servoPin1 = GPIO.PWM(17, 50) #Pin, Hz
-        self._servoPin2 = GPIO.PWM(18, 50)
-        self._servoPin1.start(0)
-        self._servoPin2.start(0)
-
+        #ESCD2in.calibrate()
     def shutdown(self):
         self.stop()
-        self.setFlyWheelSpeed(0)
         GPIO.cleanup()
+        ESCD2in.stopstop()
         print("Process Safely Stopped")
 
     def remoteControl(self):
-        from pynput.keyboard import Key, Listener
+        """from pynput.keyboard import Key, Listener
         def on_press(key):
         	if key == Key.down:
         		self.backward()
@@ -53,13 +49,38 @@ class Robot:
          		return False
 
         with Listener(on_press=on_press,on_release=on_release) as listener:
-        		listener.join()
+        		listener.join()"""
+        
+        
+
+        while 1:
+            x = raw_input("Key: ").lower()
+            if x == "w":
+                self.forward()
+            elif x == "s":
+                self.backward()
+            elif x == "a":
+                self.turnLeft()
+            elif x == "d":
+                self.turnRight()
+            elif x == "o":
+                self.flyWheelsOn()
+            elif x == "f":
+                self.flyWheelsOff()
+            else:
+                continue
+            sleep(.3)
+            self.stop()
 
     def toggleGPIOPins(self, highPins, lowPins):
         for p in highPins:
             GPIO.output(p, GPIO.HIGH)
         for p in lowPins:
             GPIO.output(p, GPIO.LOW)
+    def flyWheelsOn(self):
+        ESCD2in.manual_drive("1400")
+    def flyWheelsOff(self):
+        ESCD2in.manual_drive("0")
 
     def backward(self):
         self.stop()
@@ -80,10 +101,6 @@ class Robot:
     def stop(self):
         self.toggleGPIOPins(highPins=list(range(14,20))+[8,11], lowPins=[])
 
-    def setFlyWheelSpeed(self, speed):
-        self._servoPin1.ChangeDutyCycle(speed)
-        self._servoPin2.ChangeDutyCycle(speed)
-
 
     def takePhoto(self):
         stream = io.BytesIO()
@@ -99,6 +116,10 @@ class Robot:
 
         imgDimensions = img.shape
         cimg = img
+
+        cv2.imshow("", img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
         #Increase the colour contrast
         clahe = cv2.createCLAHE(clipLimit=3, tileGridSize=(8,8))
@@ -125,8 +146,8 @@ class Robot:
             minDist=100, #Minimum distance between the centers of the detected circles
             param1=50, #the higher threshold of the two passed to the Canny() edge detector
             param2=80, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
-            minRadius=10,
-            maxRadius=110,
+            minRadius=5,
+            maxRadius=150,
         )
 
         if circles is None:
@@ -148,9 +169,9 @@ class Robot:
         #Note, we might need to crop the image to facilitate better characteristics
 
         scalePhoto = self.takePhoto()
-        imgVerticalCentre = int(img.shape[1]/2)
+        imgVerticalCentre = int(scalePhoto.shape[1]/2)
 
-        turnStepTime = 0.5
+        turnStepTime = 0.05
         turnTolerancePixels = 30
         timeForwardAfterTurn = 1
         noBallForwardTime = 1
@@ -160,28 +181,35 @@ class Robot:
             turn = self.findBall(img, imgVerticalCentre)
             self.stop()
             if turn is None:
+                print("Hit 1")
                 #Drive forwards
                 self.forward()
-                time.sleep(noBallForwardTime)
+                sleep(noBallForwardTime)
             elif abs(turn) < turnTolerancePixels:
                 #The ball is close to cental, so drive forward to pick it up
+                print("Hit 2")
                 self.forward()
-                time.sleep(timeForwardAfterTurn)
+                sleep(timeForwardAfterTurn)
             else:
                 #Center the closest ball
                 if turn < 0:
                     self.turnLeft()
                 else:
                     self.turnRight()
-                time.sleep(turnStepTime)
+                sleep(turnStepTime)
 
 
 def main():
+
     robot = Robot()
     atexit.register(robot.shutdown)
 
-    robot.remoteControl()
-    robot.turnToBall()
+
+    x = raw_input("Key: ")
+    if x == "r":
+        robot.remoteControl()
+    else:
+        robot.turnToBall()
 
 if __name__ == "__main__":
     exit(main())

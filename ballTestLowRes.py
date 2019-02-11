@@ -28,8 +28,8 @@ def main():
 
     prevTurn = 0
     while True:
-##        img = getImage(save=True)
-        img = cv2.imread('circle.jpg')
+        img = getImage(save=False)
+        #img = cv2.imread('circle.jpg')
         imgDimensions = img.shape
         imgVerticalCentre = int(img.shape[1]/2)
 
@@ -137,7 +137,7 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         minDist=100, #Minimum distance between the centers of the detected circles
         param1=50, #the higher threshold of the two passed to the Canny() edge detector
         param2=80, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
-        minRadius=10,
+        minRadius=30,
         maxRadius=110,
     )
 
