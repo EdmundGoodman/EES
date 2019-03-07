@@ -39,16 +39,16 @@ class Robot:
         	if key == Key.up:
         		self.forward()
         	if key == Key.right:
-        		robot.turnRight()
+        		self.turnRight()
         	if key == Key.left:
-        		robot.turnLeft()
-            if key == Key.q:
-                robot.flyWheelsOn()
-            if key == Key.e:
-                robot.flyWheelsOff()
+        		self.turnLeft()
+                #if key == Key.q:
+                #    robot.flyWheelsOn()
+                #if key == Key.e:
+                #    robot.flyWheelsOff()
 
         def on_release(key):
-        	robot.Stop()
+        	self.stop()
         	if key == Key.esc:
                 #ESCD2in.stopstop()
          		return False
@@ -114,7 +114,7 @@ class Robot:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         #Perform signal operations on the image to make it easier to analyses
-        gray_blur = cv2.medianBlur(img, 13)  # Remove noise before laplacian
+        gray_blur = cv2.medianBlur(img, 7)  # Remove noise before laplacian
         gray_lap = cv2.Laplacian(gray_blur, cv2.CV_8UC1, ksize=5)
         out_blur = cv2.medianBlur(gray_lap, 3) # Further blur noise from laplacian
         img = out_blur
@@ -128,13 +128,17 @@ class Robot:
             dp=1, #Inverse ratio of the accumulator resolution to the image resolution
             minDist=100, #Minimum distance between the centers of the detected circles
             param1=50, #the higher threshold of the two passed to the Canny() edge detector
-            param2=80, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
-            minRadius=5,
-            maxRadius=150,
+            param2=65, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
+            minRadius=30,
+            maxRadius=110,
         )
 
         if circles is None:
             print("No circles found, try tuning the parameters")
+            cv2.imshow("Detected circles", cimg)
+            sleep(5) 
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
             return None
 
         #Find the closest circle (lowest vertical height - so heighest vertical pixel)
@@ -146,6 +150,7 @@ class Robot:
             cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2) #Draw the outer circle
         cv2.line(cimg, (imgVerticalCentre, 0), (imgVerticalCentre, imgDimensions[1]), (255,0,0), 2)
         cv2.imshow('Detected circles',cimg)
+        sleep(5)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -166,7 +171,7 @@ class Robot:
         timeForwardAfterTurn = 1
         noBallForwardTime = 1
 
-        self.stop()
+        #self.stop()
         while True:
             data = raw_input("Step/Exit [*/x]: ")
             if data.lower() == "x":
@@ -177,22 +182,22 @@ class Robot:
 
             if turn is None:
                 #Drive forwards
-                self.forward()
+                #self.forward()
                 sleep(noBallForwardTime)
             elif abs(turn) < turnTolerancePixels:
                 #The ball is close to cental, so drive forward to pick it up
                 print("Found ball")
-                self.forward()
+                #self.forward()
                 sleep(timeForwardAfterTurn)
             else:
                 #Center the closest ball
                 print("Turning to ball")
                 if turn < 0:
-                    self.turnLeft()
+                    pass #self.turnLeft()
                 else:
-                    self.turnRight()
+                    pass #self.turnRight()
                 sleep(turnStepTime)
-            self.stop()
+            #self.stop()
 
 
 def main():
@@ -203,9 +208,9 @@ def main():
 
     while True:
         data = raw_input("Remote control [r], Turn to ball [t]: ")
-        if x == "r":
-            robot.remoteControl()
-        elif x == "":
+        if data == "r":
+            pass #robot.remoteControl()
+        elif data == "t":
             robot.turnToBall()
         else:
             pass

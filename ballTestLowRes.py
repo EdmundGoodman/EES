@@ -79,7 +79,7 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
     #Perform signal operations on the image to make it easier to analyses
 
     #img = cv2.equalizeHist(img) #Increase saturation of the image
-    gray_blur = cv2.medianBlur(img, 13)  # Remove noise before laplacian
+    gray_blur = cv2.medianBlur(img, 7)  # Remove noise before laplacian
     if display:
         cv2.imshow('gray_blur circles',gray_blur)
         cv2.waitKey(0)
@@ -105,7 +105,7 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
 
     lap_blur = gray_lap
 
-    out_blur = cv2.medianBlur(lap_blur, 3) # Further blur noise from laplacian
+    out_blur = cv2.medianBlur(lap_blur, 5) # Further blur noise from laplacian
     if display:
         cv2.imshow('processed circles',out_blur)
         cv2.waitKey(0)
@@ -123,7 +123,7 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         dp=1, #Inverse ratio of the accumulator resolution to the image resolution
         minDist=100, #Minimum distance between the centers of the detected circles
         param1=50, #the higher threshold of the two passed to the Canny() edge detector
-        param2=80, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
+        param2=65, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
         minRadius=30,
         maxRadius=110,
     )
