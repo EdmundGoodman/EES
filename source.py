@@ -27,6 +27,7 @@ class Robot:
         GPIO.setup(26, GPIO.OUT, initial=1)
         GPIO.setup(27, GPIO.OUT, initial=1)
         self.ESCs = ESCD3in.PairESCController()
+        #self.ESCs.calibrate()
         #ESCD2in.calibrate()
 
     def shutdown(self):
@@ -47,7 +48,7 @@ class Robot:
         		self.turnRight()
         	if key == Key.left:
         		self.turnLeft()
-                if key == Key.enter:
+                if key == Key.space:
                     self.flyWheelsOn()
 
         def on_release(key):
@@ -178,14 +179,15 @@ class Robot:
         #Tune these parameters to make it work better
         turnStepTime = 0.2
         turnTolerancePixels = 32
-        timeForwardAfterTurn = 1
+        timeForwardAfterTurn = 2
         noBallForwardTime = 1
+        turnScale=0.005
 
-        resolution = (480,360)
-        transforms = {"clipLimit":3, "tileGridSize":(8,8),
-            "medianBlur1":13, "laplacian":5, "medianBlur2":1}
-        houghParams = {"dp":1,"minDist":100,"param1":50,
-            "param2":65,"minRadius":30,"maxRadius":70,}
+        resolution = (300,225)
+        transforms = {"clipLimit":7, "tileGridSize":(8,8),
+            "medianBlur1":7, "laplacian":5, "medianBlur2":3}
+        houghParams = {"dp":1,"minDist":100,"param1":40,
+            "param2":50,"minRadius":5,"maxRadius":50,}
         display = True
 
         imgVerticalCentre = None
@@ -196,7 +198,7 @@ class Robot:
                 data = raw_input("Step/Run/Exit [*/r/x]: ").lower()
                 if data == "r":
                     flag = True
-                    display = False
+                    #display = False
                 elif data == "x":
                     self.stop()
                     return False
@@ -216,10 +218,10 @@ class Robot:
             elif abs(turn) < turnTolerancePixels:
                 #The ball is close to central, so drive forward to pick it up
                 print("Found ball")
-                self.flyWheelsOn()
+                #self.flyWheelsOn()
                 self.forward()
                 sleep(timeForwardAfterTurn)
-                self.flyWheelsOff()
+                #self.flyWheelsOff()
 
             else:
                 #Center the closest ball
@@ -229,6 +231,7 @@ class Robot:
                 else:
                     print("Turning right")
                     self.turnRight()
+                #print(int(turnStepTime*turn*turnScale))
                 sleep(turnStepTime)
 
             if not flag:

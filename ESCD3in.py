@@ -12,7 +12,7 @@ class PairESCController:
     def __init__(self, pins=(23,21)):
         self.ESC, self.ESC2 = pins
 
-        pi = pigpio.pi()
+        self.pi = pigpio.pi()
         #self.stop()
         self.maxValue = 2000
         self.minValue = 1000
@@ -20,7 +20,7 @@ class PairESCController:
         self.calibrated = False
 
 
-    def manual_drive(self, duty, debug=True, doNotCalibrate=False):
+    def manual_drive(self, duty, debug=True, doNotCalibrate=True):
         #Set the ESC PWM duty
         if debug:
             print("Setting the motors to duty: {} (bigger is faster, {}<duty<{})".format(duty, self.minValue, self.maxValue))
@@ -28,8 +28,8 @@ class PairESCController:
         if doNotCalibrate == False and self.calibrated == False:
             self.calibrate(test=False)
 
-        pi.set_servo_pulsewidth(self.ESC,duty)
-        pi.set_servo_pulsewidth(self.ESC2,duty)
+        self.pi.set_servo_pulsewidth(self.ESC,duty)
+        self.pi.set_servo_pulsewidth(self.ESC2,duty)
 
     def calibrate(self, test=True):
         #Calibrate the ESC to allow it to drive
@@ -50,6 +50,7 @@ class PairESCController:
             print("You should another tone from every motor")
             for i in range(13):
                 print("{} seconds till next process (note, we can probably reduce this)".format(13-i))
+                sleep(1)
             self.manual_drive(0, debug=False) #self.stop()
 
         self.calibrated = True
@@ -65,12 +66,12 @@ class PairESCController:
 
     def stop(self):
         #Stop the ESCs
-        self.manual_drive(0, debug=False, doNotCalibrate=True)
+        self.manual_drive(0, debug=False)
 
     def stopstop(self):
         #Stop the ESCs and kill the pigpiod daemons
         self.stop()
-        pi.stop()
+        self.pi.stop()
 
 if __name__ == "__main__":
     c = PairESCController()
