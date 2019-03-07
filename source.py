@@ -5,81 +5,13 @@ import atexit
 import math
 import cv2
 import io
+import os
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 from picamera import PiCamera
-
-#import ESCD2in
-os.system("sudo pigpiod")
-sleep(1)
-import pigpio
-
-
-class PairESCController:
-    def __init__(self, pins=(23,21)):
-        self.ESC, self.ESC2 = pins
-
-        pi = pigpio.pi()
-        self.stop()
-        self.maxValue = 2000
-        self.minValue = 1000
-
-        self.calibrated = False
-
-
-    def manual_drive(self, duty, debug=True, doNotCalibrate=False):
-        #Set the ESC PWM duty
-        if debug:
-            print("Setting the motors to duty: {} (bigger is faster, {}<duty<{})".format(duty, self.minValue, self.maxValue))
-
-        if self.calibrated == False and doNotCalibrate == False:
-            self.calibrate(test=False)
-
-        pi.set_servo_pulsewidth(self.ESC,duty)
-        pi.set_servo_pulsewidth(self.ESC2,duty)
-
-    def calibrate(self, test=True):
-        #Calibrate the ESC to allow it to drive
-        #Note that this almost certainly has uncessary sleeps in
-
-        self.manual_drive(0, debug=False) #self.stop()
-        print("Disconnect the battery and press Enter")
-        inp = raw_input() #Add code to do relay connect/disconnect instead
-
-        self.manual_drive(self.maxValue, debug=False)
-        print("Connect the battery now, you will here two beeps, then wait for a gradual falling tone then press Enter")
-        inp = raw_input() #Add sleep as necessary instead
-
-        self.manual_drive(self.minValue, debug=False)
-
-        #Do we even need this step? We've already done it before
-        if 1:
-            print("You should another tone from every motor")
-            for i in range(13):
-                print("{} seconds till next process (note, we can probably reduce this)".format(13-i))
-            self.manual_drive(0, debug=False) #self.stop()
-
-        self.calibrated = True
-        sleep(2)
-
-        if test:
-            #print("Arming ESC now")
-            self.manual_drive(self.minValue, debug=False)
-            print("Motors spinning up for 10 seconds at the lowest speed")
-            sleep(10) # You can change this to any other function you want
-            print("Motors spinning down, and stopping")
-            self.stop()
-
-    def stop(self):
-        #Stop the ESCs
-        self.manual_drive(0, debug=False, doNotCalibrate=False)
-
-    def stopstop(self):
-        #Stop the ESCs and kill the pigpiod library
-        self.stop()
-        pi.stop()
+import ESCD2in
 
 
 
@@ -95,15 +27,12 @@ class Robot:
         GPIO.setup(26, GPIO.OUT, initial=1)
         GPIO.setup(27, GPIO.OUT, initial=1)
 
-        self.ESCs = PairESCController()
-        self.ESCs.calibrate()
         #ESCD2in.calibrate()
 
     def shutdown(self):
         self.stop()
         GPIO.cleanup()
-        self.ESCs.stopstop()
-        #ESCD2in.stopstop()
+        ESCD2in.stopstop()
         print("Process Safely Stopped")
 
     def remoteControl(self):
@@ -117,14 +46,15 @@ class Robot:
         		self.turnRight()
         	if key == Key.left:
         		self.turnLeft()
-            if key == Key.enter:
-                self.flyWheelsOn()
+                if key == Key.enter:
+                    self.flyWheelsOn()
 
         def on_release(key):
-        	self.stop()
-            self.ESCs.stop()
-        	if key == Key.esc:
-         		return False
+            self.stop()
+            #self.ESCs.stop()
+            ESCD2in.stop()
+            if key == Key.esc:
+         	    return False
 
         with Listener(on_press=on_press,on_release=on_release) as listener:
         		listener.join()
@@ -136,12 +66,10 @@ class Robot:
             GPIO.output(p, GPIO.LOW)
 
     def flyWheelsOn(self):
-        self.ESCs.manual_drive("1400")
-        #ESCD2in.manual_drive("1400")
+        ESCD2in.manual_drive("1400")
 
     def flyWheelsOff(self):
-        self.ESCs.stop()
-        #ESCD2in.manual_drive("0")
+        ESCD2in.manual_drive("0")
 
     def backward(self):
         self.stop()
@@ -151,11 +79,11 @@ class Robot:
         self.stop()
         self.toggleGPIOPins(highPins=[], lowPins=[26,27,8,11,16,19])
 
-    def turnLeft(self):
+    def turnRight(self):
         self.stop()
         self.toggleGPIOPins(highPins=[8,11], lowPins=[26,27,16,19])
 
-    def turnRight(self):
+    def turnLeft(self):
         self.stop()
         self.toggleGPIOPins(highPins=[26,27], lowPins=[8,11,16,19])
 
@@ -224,7 +152,7 @@ class Robot:
 
         if circles is None:
             print("No circles found, try tuning the parameters")
-            showImage('Detected circles',cimg)
+            showImage(cimg, 'Detected circles')
             return None
 
         #Find the closest circle (lowest vertical height - so heighest vertical pixel)
@@ -236,25 +164,24 @@ class Robot:
             for i in circles:
                 cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2) #Draw the outer circle
             cv2.line(cimg, (imgVerticalCentre, 0), (imgVerticalCentre, imgDimensions[1]), (255,0,0), 2)
-            showImage('Detected circles',cimg)
+            showImage(cimg,'Detected circles')
 
         closestCircle = circles[0]
         xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
         return xCentralDisplacement
 
-
     def turnToBall(self):
         #Tune these parameters to make it work better
-        turnStepTime = 0.05
+        turnStepTime = 0.2
         turnTolerancePixels = 30
         timeForwardAfterTurn = 1
         noBallForwardTime = 1
 
         resolution = (480,360)
         transforms = {"clipLimit":3, "tileGridSize":(8,8),
-            "medianBlur1":7, "laplacian":5, "medianBlur2":5}
+            "medianBlur1":7, "laplacian":5, "medianBlur2":1}
         houghParams = {"dp":1,"minDist":100,"param1":50,
-            "param2":65,"minRadius":30,"maxRadius":110,}
+            "param2":65,"minRadius":30,"maxRadius":70,}
         display = True
 
         imgVerticalCentre = None
@@ -267,7 +194,7 @@ class Robot:
             img = self.takePhoto(resolution)
             if imgVerticalCentre == None:
                 imgVerticalCentre = int(img.shape[1]/2)
-            turn = self.findBall(img, transforms, houghParams, display=True)
+            turn = self.findBall(img, imgVerticalCentre, transforms, houghParams, display)
             print(turn)
 
             if turn is None:
@@ -295,7 +222,7 @@ class Robot:
                 sleep(turnStepTime)
 
             self.stop() #Consider removing for cleaner runs
-
+        self.stop()
 
 
 def main():
@@ -303,6 +230,7 @@ def main():
     atexit.register(robot.shutdown)
 
     while True:
+        os.system('clear')
         data = raw_input("Remote control [r], Turn to ball [t]: ")
         if data == "r":
             robot.remoteControl()
