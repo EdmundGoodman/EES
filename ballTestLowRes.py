@@ -68,19 +68,6 @@ def turnToBall(img, imgVerticalCentre=None, turnSize=10, display=True):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    '''##    Mask for red
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower_red = np.array([30,150,50])
-    upper_red = np.array([255,255,120])
-    mask = cv2.inRange(img, lower_red, upper_red)
-    res = cv2.bitwise_and(img, img, mask=mask)
-    img = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
-    if display:
-        cv2.imshow('masked circles',img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()'''
-
-
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     if display:
