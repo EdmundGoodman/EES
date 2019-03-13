@@ -1,4 +1,4 @@
-from time import sleep, time
+27from time import sleep, time
 from PIL import Image
 import atexit
 import cv2
@@ -24,7 +24,10 @@ class Robot:
             GPIO.setup(i,GPIO.OUT,initial=1)
         GPIO.setup(8,GPIO.OUT,initial=1)
         GPIO.setup(11, GPIO.OUT,initial=1)
+        GPIO.setup(26, GPIO.OUT, initial=1)
+        GPIO.setup(27, GPIO.OUT, initial=1)
         #ESCD2in.calibrate()
+
     def shutdown(self):
         self.stop()
         GPIO.cleanup()
@@ -42,10 +45,10 @@ class Robot:
         		self.turnRight()
         	if key == Key.left:
         		self.turnLeft()
-                #if key == Key.q:
-                #    robot.flyWheelsOn()
-                #if key == Key.e:
-                #    robot.flyWheelsOff()
+            #if key == Key.q:
+            #    robot.flyWheelsOn()
+            #if key == Key.e:
+            #    robot.flyWheelsOff()
 
         def on_release(key):
         	self.stop()
@@ -70,22 +73,22 @@ class Robot:
 
     def backward(self):
         self.stop()
-        self.toggleGPIOPins(highPins=[14,15,8,11], lowPins=[16,19])
+        self.toggleGPIOPins(highPins=[26,27,8,11], lowPins=[16,19])
 
     def forward(self):
         self.stop()
-        self.toggleGPIOPins(highPins=[], lowPins=[14,15,8,11,16,19])
+        self.toggleGPIOPins(highPins=[], lowPins=[26,27,8,11,16,19])
 
     def turnLeft(self):
         self.stop()
-        self.toggleGPIOPins(highPins=[8,11], lowPins=[14,15,16,19])
+        self.toggleGPIOPins(highPins=[8,11], lowPins=[26,27,16,19])
 
     def turnRight(self):
         self.stop()
-        self.toggleGPIOPins(highPins=[14,15], lowPins=[8,11,16,19])
+        self.toggleGPIOPins(highPins=[26,27], lowPins=[8,11,16,19])
 
     def stop(self):
-        self.toggleGPIOPins(highPins=list(range(14,20))+[8,11], lowPins=[])
+        self.toggleGPIOPins(highPins=list(range(14,20))+[8,11,26,27], lowPins=[])
 
 
     def takePhoto(self, resolution=(480, 360)):
@@ -208,9 +211,7 @@ class Robot:
 
     def turnToBall(self):
         #Note, we might need to crop the image to facilitate better characteristics
-
-        scalePhoto = self.takePhoto()
-        imgVerticalCentre = int(scalePhoto.shape[1]/2)
+        imgVerticalCentre = None
 
         turnStepTime = 0.05
         turnTolerancePixels = 30
@@ -225,9 +226,12 @@ class Robot:
 
             img = self.takePhoto()
             turn = self.findBall(img, imgVerticalCentre)
+            if imgVerticalCentre == None:
+                imgVerticalCentre = int(scalePhoto.shape[1]/2)
 
             if turn is None:
                 #Drive forwards
+                print("No ball found")
                 #self.forward()
                 sleep(noBallForwardTime)
             elif abs(turn) < turnTolerancePixels:
@@ -239,9 +243,9 @@ class Robot:
                 #Center the closest ball
                 print("Turning to ball")
                 if turn < 0:
-                    pass #self.turnLeft()
+                    print("Turning left") #self.turnLeft()
                 else:
-                    pass #self.turnRight()
+                    print("Turning right") #self.turnRight()
                 sleep(turnStepTime)
             #self.stop()
 
