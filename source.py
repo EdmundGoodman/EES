@@ -1,4 +1,4 @@
-27from time import sleep, time
+from time import sleep, time
 from PIL import Image
 import atexit
 import cv2
@@ -6,14 +6,12 @@ import numpy as np
 from PIL import Image
 import math
 import io
-#from ESCD2in import *
 import ESCD2in
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 from picamera import PiCamera
-
 
 class Robot:
     def __init__(self):
@@ -45,15 +43,12 @@ class Robot:
         		self.turnRight()
         	if key == Key.left:
         		self.turnLeft()
-            #if key == Key.q:
-            #    robot.flyWheelsOn()
-            #if key == Key.e:
-            #    robot.flyWheelsOff()
 
         def on_release(key):
         	self.stop()
         	if key == Key.esc:
                 #ESCD2in.stopstop()
+                self.stop()
          		return False
 
         with Listener(on_press=on_press,on_release=on_release) as listener:
@@ -90,7 +85,6 @@ class Robot:
     def stop(self):
         self.toggleGPIOPins(highPins=list(range(14,20))+[8,11,26,27], lowPins=[])
 
-
     def takePhoto(self, resolution=(480, 360)):
         stream = io.BytesIO()
         with PiCamera() as camera:
@@ -100,94 +94,61 @@ class Robot:
         image = cv2.imdecode(data, 1)
         return image
 
-    def findBall(self, img, imgVerticalCentre=None, display=True):
-
-        if display:
-            cv2.imshow('coloured circles',img)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+    def findBall(self, img, imgVerticalCentre, transforms, houghParams, display=False):
+        def showImage(image, caption="Image"):
+            if display:
+                cv2.imshow(caption,image)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
 
         imgDimensions = img.shape
         cimg = img
 
-    ##    Increase the colour contrast
+        showImage(cimg, 'coloured circles')
 
-        clahe = cv2.createCLAHE(clipLimit=3, tileGridSize=(8,8))
+        #Increase the colour contrast, and turn it grayscale
+        clahe = cv2.createCLAHE(clipLimit=transforms["clipLimit"],
+                                tileGridSize=transforms["tileGridSize"])
         lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
         l,a,b = cv2.split(lab)
         l2 = clahe.apply(l)
         lab = cv2.merge((l2,a,b))
         img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
-
-        if display:
-            cv2.imshow('clahe circles',img)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
+        showImage(img, 'clahe circles')
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        if display:
-            cv2.imshow('initial circles',img)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
+        showImage(img, 'grayscale circles')
 
         #Perform signal operations on the image to make it easier to analyses
+        img = cv2.medianBlur(img, transforms["medianBlur1"])  # Remove noise before laplacian
+        showImage(img, 'gray_blur circles')
 
-        #img = cv2.equalizeHist(img) #Increase saturation of the image
-        gray_blur = cv2.medianBlur(img, 7)  # Remove noise before laplacian
-        if display:
-            cv2.imshow('gray_blur circles',gray_blur)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+        img = cv2.Laplacian(img, cv2.CV_8UC1, ksize=transforms["laplacian"])
+        showImage(img, 'gray_lap circles')
 
-        gray_lap = cv2.Laplacian(gray_blur, cv2.CV_8UC1, ksize=5)
-        if display:
-            cv2.imshow('gray_lap circles',gray_lap)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-        '''dilate_lap = cv2.dilate(gray_lap, (10, 10))  # Fill in gaps from blurring. This helps to detect circles with broken edges.
-        if display:
-            cv2.imshow('dilate_lap circles',dilate_lap)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-        lap_blur = cv2.bilateralFilter(dilate_lap, 5, 9, 9) # Furthur remove noise introduced by laplacian. This removes false pos in space between the two groups of circles.
-        if display:
-            cv2.imshow('lap_blur circles',lap_blur)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()'''
-
-        lap_blur = gray_lap
-
-        out_blur = cv2.medianBlur(lap_blur, 5) # Further blur noise from laplacian
-        if display:
-            cv2.imshow('processed circles',out_blur)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-        img = out_blur
-
+        img = cv2.medianBlur(img, transforms["medianBlur2"]) # Further blur noise from laplacian
+        showImage(img, 'processed circles')
 
         #https://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=houghcircles
-        #Tune param2 to remove false positives
-        #Tune min & max radius to the possible ball sizes
+        #dp, the inverse ratio of the accumulator resolution to the image resolution
+        #minDist, the minimum distance between the centers of the detected circles
+        #param1, the higher threshold of the two passed to the Canny() edge detector
+        #param2, the accumulator threshold for the circle centers at the detection stage.
+        #        the smaller it is, the more false circles may be detected
         circles = cv2.HoughCircles(
             img,
             cv2.cv.CV_HOUGH_GRADIENT,
-            dp=1, #Inverse ratio of the accumulator resolution to the image resolution
-            minDist=100, #Minimum distance between the centers of the detected circles
-            param1=50, #the higher threshold of the two passed to the Canny() edge detector
-            param2=65, #the accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
-            minRadius=30,
-            maxRadius=110,
+            dp=houghParams["dp"],
+            minDist=houghParams["minDist"],
+            param1=houghParams["param1"],
+            param2=houghParams["param2"],
+            minRadius=houghParams["minRadius"],
+            maxRadius=houghParams["maxRadius"],
         )
 
         if circles is None:
             print("No circles found, try tuning the parameters")
-            exit()
-
+            showImage('detected circles',cimg)
+            return None
 
         #Find the closest circle (lowest vertical height - so heighest vertical pixel)
         #Then give direction you need to turn to centre it in the image
@@ -198,15 +159,11 @@ class Robot:
             for i in circles:
                 cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2) #Draw the outer circle
             cv2.line(cimg, (imgVerticalCentre, 0), (imgVerticalCentre, imgDimensions[1]), (255,0,0), 2)
-
-            cv2.imshow('detected circles',cimg)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            showImage('detected circles',cimg)
 
         closestCircle = circles[0]
         xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
         return xCentralDisplacement
-
 
 
     def turnToBall(self):
@@ -218,48 +175,59 @@ class Robot:
         timeForwardAfterTurn = 1
         noBallForwardTime = 1
 
-        #self.stop()
+        resolution = (480,360)
+        transforms = {"clipLimit":3, "tileGridSize":(8,8),
+            "medianBlur1":7, "laplacian":5, "medianBlur2":5}
+        houghParams = {"dp":1,"minDist":100,"param1":50,
+            "param2":65,"minRadius":30,"maxRadius":110,}
+        display = True
+
         while True:
             data = raw_input("Step/Exit [*/x]: ")
             if data.lower() == "x":
                 return False
 
-            img = self.takePhoto()
-            turn = self.findBall(img, imgVerticalCentre)
+            img = self.takePhoto(resolution)
             if imgVerticalCentre == None:
-                imgVerticalCentre = int(scalePhoto.shape[1]/2)
+                imgVerticalCentre = int(img.shape[1]/2)
+            turn = self.findBall(img, transforms, houghParams, display=True)
+            print(turn)
 
             if turn is None:
                 #Drive forwards
                 print("No ball found")
-                #self.forward()
+                self.forward()
                 sleep(noBallForwardTime)
+
             elif abs(turn) < turnTolerancePixels:
-                #The ball is close to cental, so drive forward to pick it up
+                #The ball is close to central, so drive forward to pick it up
                 print("Found ball")
-                #self.forward()
+                #Spin up flywheels
+                self.forward()
                 sleep(timeForwardAfterTurn)
+                #Spin down flywheels
+
             else:
                 #Center the closest ball
-                print("Turning to ball")
                 if turn < 0:
-                    print("Turning left") #self.turnLeft()
+                    print("Turning left")
+                    self.turnLeft()
                 else:
-                    print("Turning right") #self.turnRight()
+                    print("Turning right")
+                    self.turnRight()
                 sleep(turnStepTime)
-            #self.stop()
+
+            self.stop() #Consider removing for cleaner runs
 
 
 def main():
-
     robot = Robot()
     atexit.register(robot.shutdown)
-
 
     while True:
         data = raw_input("Remote control [r], Turn to ball [t]: ")
         if data == "r":
-            pass #robot.remoteControl()
+            robot.remoteControl()
         elif data == "t":
             robot.turnToBall()
         else:
