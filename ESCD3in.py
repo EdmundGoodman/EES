@@ -1,10 +1,10 @@
 # This program will let you test your ESC and brushless motor.
 # Make sure your battery is not connected if you are going to calibrate it at first.
 
-import time
+from time import sleep, time
 import os
 os.system ("sudo pigpiod")
-time.sleep(1) #Wait for pigpiod to initialise
+sleep(1) #Wait for pigpiod to initialise
 import pigpio
 
 
@@ -53,13 +53,13 @@ class PairESCController:
             self.manual_drive(0, debug=False) #self.stop()
 
         self.calibrated = True
-        time.sleep(2)
+        sleep(2)
 
         if test:
             #print("Arming ESC now")
             self.manual_drive(self.minValue, debug=False)
             print("Motors spinning up for 10 seconds at the lowest speed")
-            time.sleep(10) # You can change this to any other function you want
+            sleep(10) # You can change this to any other function you want
             print("Motors spinning down, and stopping")
             self.stop()
 
