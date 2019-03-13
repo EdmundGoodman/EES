@@ -97,27 +97,75 @@ class Robot:
         image = cv2.imdecode(data, 1)
         return image
 
-    def findBall(self, img, imgVerticalCentre=None):
-        #Returns the number of pixels a ball is from the center line
+    def findBall(self, img, imgVerticalCentre=None, display=True):
+
+        if display:
+            cv2.imshow('coloured circles',img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
         imgDimensions = img.shape
         cimg = img
 
-        #Increase the colour contrast
+    ##    Increase the colour contrast
+
         clahe = cv2.createCLAHE(clipLimit=3, tileGridSize=(8,8))
         lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
         l,a,b = cv2.split(lab)
         l2 = clahe.apply(l)
         lab = cv2.merge((l2,a,b))
-        #img = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
         img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
+
+        if display:
+            cv2.imshow('clahe circles',img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+        if display:
+            cv2.imshow('initial circles',img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+
         #Perform signal operations on the image to make it easier to analyses
+
+        #img = cv2.equalizeHist(img) #Increase saturation of the image
         gray_blur = cv2.medianBlur(img, 7)  # Remove noise before laplacian
+        if display:
+            cv2.imshow('gray_blur circles',gray_blur)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
         gray_lap = cv2.Laplacian(gray_blur, cv2.CV_8UC1, ksize=5)
-        out_blur = cv2.medianBlur(gray_lap, 3) # Further blur noise from laplacian
+        if display:
+            cv2.imshow('gray_lap circles',gray_lap)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        '''dilate_lap = cv2.dilate(gray_lap, (10, 10))  # Fill in gaps from blurring. This helps to detect circles with broken edges.
+        if display:
+            cv2.imshow('dilate_lap circles',dilate_lap)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        lap_blur = cv2.bilateralFilter(dilate_lap, 5, 9, 9) # Furthur remove noise introduced by laplacian. This removes false pos in space between the two groups of circles.
+        if display:
+            cv2.imshow('lap_blur circles',lap_blur)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()'''
+
+        lap_blur = gray_lap
+
+        out_blur = cv2.medianBlur(lap_blur, 5) # Further blur noise from laplacian
+        if display:
+            cv2.imshow('processed circles',out_blur)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
         img = out_blur
+
 
         #https://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=houghcircles
         #Tune param2 to remove false positives
@@ -135,24 +183,22 @@ class Robot:
 
         if circles is None:
             print("No circles found, try tuning the parameters")
-            cv2.imshow("Detected circles", cimg)
-            sleep(5) 
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            return None
+            exit()
+
 
         #Find the closest circle (lowest vertical height - so heighest vertical pixel)
         #Then give direction you need to turn to centre it in the image
         circles = np.uint16(np.around(circles))[0]
         circles = np.uint16(sorted(circles,key=lambda l:l[1], reverse=True))
 
-        for i in circles:
-            cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2) #Draw the outer circle
-        cv2.line(cimg, (imgVerticalCentre, 0), (imgVerticalCentre, imgDimensions[1]), (255,0,0), 2)
-        cv2.imshow('Detected circles',cimg)
-        sleep(5)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        if display:
+            for i in circles:
+                cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2) #Draw the outer circle
+            cv2.line(cimg, (imgVerticalCentre, 0), (imgVerticalCentre, imgDimensions[1]), (255,0,0), 2)
+
+            cv2.imshow('detected circles',cimg)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
         closestCircle = circles[0]
         xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
