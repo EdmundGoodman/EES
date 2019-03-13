@@ -1,17 +1,87 @@
 from time import sleep, time
 from PIL import Image
-import atexit
-import cv2
 import numpy as np
-from PIL import Image
+import atexit
 import math
+import cv2
 import io
-import ESCD2in
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 from picamera import PiCamera
+
+#import ESCD2in
+os.system("sudo pigpiod")
+sleep(1)
+import pigpio
+
+
+class PairESCController:
+    def __init__(self, pins=(23,21)):
+        self.ESC, self.ESC2 = pins
+
+        pi = pigpio.pi()
+        self.stop()
+        self.maxValue = 2000
+        self.minValue = 1000
+
+        self.calibrated = False
+
+
+    def manual_drive(self, duty, debug=True, doNotCalibrate=False):
+        #Set the ESC PWM duty
+        if debug:
+            print("Setting the motors to duty: {} (bigger is faster, {}<duty<{})".format(duty, self.minValue, self.maxValue))
+
+        if self.calibrated == False and doNotCalibrate == False:
+            self.calibrate(test=False)
+
+        pi.set_servo_pulsewidth(self.ESC,duty)
+        pi.set_servo_pulsewidth(self.ESC2,duty)
+
+    def calibrate(self, test=True):
+        #Calibrate the ESC to allow it to drive
+        #Note that this almost certainly has uncessary sleeps in
+
+        self.manual_drive(0, debug=False) #self.stop()
+        print("Disconnect the battery and press Enter")
+        inp = raw_input() #Add code to do relay connect/disconnect instead
+
+        self.manual_drive(self.maxValue, debug=False)
+        print("Connect the battery now, you will here two beeps, then wait for a gradual falling tone then press Enter")
+        inp = raw_input() #Add sleep as necessary instead
+
+        self.manual_drive(self.minValue, debug=False)
+
+        #Do we even need this step? We've already done it before
+        if 1:
+            print("You should another tone from every motor")
+            for i in range(13):
+                print("{} seconds till next process (note, we can probably reduce this)".format(13-i))
+            self.manual_drive(0, debug=False) #self.stop()
+
+        self.calibrated = True
+        sleep(2)
+
+        if test:
+            #print("Arming ESC now")
+            self.manual_drive(self.minValue, debug=False)
+            print("Motors spinning up for 10 seconds at the lowest speed")
+            sleep(10) # You can change this to any other function you want
+            print("Motors spinning down, and stopping")
+            self.stop()
+
+    def stop(self):
+        #Stop the ESCs
+        self.manual_drive(0, debug=False, doNotCalibrate=False)
+
+    def stopstop(self):
+        #Stop the ESCs and kill the pigpiod library
+        self.stop()
+        pi.stop()
+
+
 
 class Robot:
     def __init__(self):
@@ -24,12 +94,16 @@ class Robot:
         GPIO.setup(11, GPIO.OUT,initial=1)
         GPIO.setup(26, GPIO.OUT, initial=1)
         GPIO.setup(27, GPIO.OUT, initial=1)
+
+        self.ESCs = PairESCController()
+        self.ESCs.calibrate()
         #ESCD2in.calibrate()
 
     def shutdown(self):
         self.stop()
         GPIO.cleanup()
-        ESCD2in.stopstop()
+        self.ESCs.stopstop()
+        #ESCD2in.stopstop()
         print("Process Safely Stopped")
 
     def remoteControl(self):
@@ -43,12 +117,13 @@ class Robot:
         		self.turnRight()
         	if key == Key.left:
         		self.turnLeft()
+            if key == Key.enter:
+                self.flyWheelsOn()
 
         def on_release(key):
         	self.stop()
+            self.ESCs.stop()
         	if key == Key.esc:
-                #ESCD2in.stopstop()
-                self.stop()
          		return False
 
         with Listener(on_press=on_press,on_release=on_release) as listener:
@@ -61,10 +136,12 @@ class Robot:
             GPIO.output(p, GPIO.LOW)
 
     def flyWheelsOn(self):
-        ESCD2in.manual_drive("1400")
+        self.ESCs.manual_drive("1400")
+        #ESCD2in.manual_drive("1400")
 
     def flyWheelsOff(self):
-        ESCD2in.manual_drive("0")
+        self.ESCs.stop()
+        #ESCD2in.manual_drive("0")
 
     def backward(self):
         self.stop()
@@ -104,7 +181,7 @@ class Robot:
         imgDimensions = img.shape
         cimg = img
 
-        showImage(cimg, 'coloured circles')
+        showImage(cimg, 'Coloured circles')
 
         #Increase the colour contrast, and turn it grayscale
         clahe = cv2.createCLAHE(clipLimit=transforms["clipLimit"],
@@ -114,19 +191,19 @@ class Robot:
         l2 = clahe.apply(l)
         lab = cv2.merge((l2,a,b))
         img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
-        showImage(img, 'clahe circles')
+        showImage(img, 'Clahe circles')
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        showImage(img, 'grayscale circles')
+        showImage(img, 'Grayscale circles')
 
         #Perform signal operations on the image to make it easier to analyses
         img = cv2.medianBlur(img, transforms["medianBlur1"])  # Remove noise before laplacian
-        showImage(img, 'gray_blur circles')
+        showImage(img, 'Gray blurred circles')
 
         img = cv2.Laplacian(img, cv2.CV_8UC1, ksize=transforms["laplacian"])
-        showImage(img, 'gray_lap circles')
+        showImage(img, 'Gray laplacian circles')
 
         img = cv2.medianBlur(img, transforms["medianBlur2"]) # Further blur noise from laplacian
-        showImage(img, 'processed circles')
+        showImage(img, 'Processed circles')
 
         #https://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=houghcircles
         #dp, the inverse ratio of the accumulator resolution to the image resolution
@@ -147,7 +224,7 @@ class Robot:
 
         if circles is None:
             print("No circles found, try tuning the parameters")
-            showImage('detected circles',cimg)
+            showImage('Detected circles',cimg)
             return None
 
         #Find the closest circle (lowest vertical height - so heighest vertical pixel)
@@ -159,7 +236,7 @@ class Robot:
             for i in circles:
                 cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2) #Draw the outer circle
             cv2.line(cimg, (imgVerticalCentre, 0), (imgVerticalCentre, imgDimensions[1]), (255,0,0), 2)
-            showImage('detected circles',cimg)
+            showImage('Detected circles',cimg)
 
         closestCircle = circles[0]
         xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
@@ -167,9 +244,7 @@ class Robot:
 
 
     def turnToBall(self):
-        #Note, we might need to crop the image to facilitate better characteristics
-        imgVerticalCentre = None
-
+        #Tune these parameters to make it work better
         turnStepTime = 0.05
         turnTolerancePixels = 30
         timeForwardAfterTurn = 1
@@ -182,6 +257,7 @@ class Robot:
             "param2":65,"minRadius":30,"maxRadius":110,}
         display = True
 
+        imgVerticalCentre = None
         while True:
             data = raw_input("Step/Exit [*/x]: ")
             if data.lower() == "x":
@@ -202,10 +278,10 @@ class Robot:
             elif abs(turn) < turnTolerancePixels:
                 #The ball is close to central, so drive forward to pick it up
                 print("Found ball")
-                #Spin up flywheels
+                self.flyWheelsOn()
                 self.forward()
                 sleep(timeForwardAfterTurn)
-                #Spin down flywheels
+                self.flyWheelsOff()
 
             else:
                 #Center the closest ball
