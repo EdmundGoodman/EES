@@ -30,6 +30,7 @@ class Robot:
         GPIO.setup(26, GPIO.OUT, initial=1)
         GPIO.setup(27, GPIO.OUT, initial=1)
         self.ESCs = ESCD3in.PairESCController()
+        #self.ESCs.calibrate()
 
     def shutdown(self):
         self.stop()
@@ -62,7 +63,7 @@ class Robot:
             self.stop()
             if key == Key.esc:
                 self.ESCs.stop()
-                 return False
+                return False
 
         with Listener(on_press=on_press,on_release=on_release) as listener:
                 listener.join()
@@ -128,7 +129,7 @@ class Robot:
 
             if display:
                 imgX, imgY = frame.shape
-                cv2.circle(frame,(x,y),radius=,(0,255,0),2) #Draw the outer circle
+                cv2.circle(frame,(x,y),(0,255,0),2) #Draw the outer circle
                 cv2.line(frame, (int(imgX/2), 0), (int(imgX/2), imgY), (255,0,0), 2)
 
         if display:
@@ -156,34 +157,36 @@ class Robot:
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()'''
 
-                _ = raw_input()
+                #_ = input()
 
                 center = self.findBall(frame)
                 endImgAnalysis = time()
 
                 if center is None: #If no balls (of the right size) are found
+                    print("No balls found")
                     if activated == 0:
                         pass
                     else:
                         bad += 1
                     if bad > 30:
                         print("Activate nulled")
-                        self.flyWheelsOff()
+                        #self.flyWheelsOff()
                         self.turnLeft()
                         bad = 0
                         activated = 0
                 else: #If a ball has been found
+                    print("Ball found")
                     if activated == 0:
                         self.stop()
-                        sleep(0.5)
-                        self.flyWheelsOn()
+                        sleep(2)
+                        #self.flyWheelsOn()
                         self.forward()
-
+                        activated = 1
                     x, y = center[0], center[1]
 
-                    if activated == 1 and abs(334-center[0]) > 50:
-                        timeToTurn = (((x)/(668))*(0.3+0.3)) - 0.3
-
+                    if activated == 1 and abs(334-center[0]) > 100:
+                        timeToTurn = (((x)/(668))*(0.25+0.25)) - 0.2
+                        print("Turning")
                         if timeToTurn > 0:
                             self.turnRight()
                             sleep(abs(timeToTurn))
@@ -204,7 +207,7 @@ def main():
 
     while True:
         os.system('clear')
-        data = raw_input("Remote control [r], Turn to ball [t] or Exit [x]: ").lower()
+        data = input("Remote control [r], Turn to ball [t] or Exit [x]: ").lower()
         if data == "r":
             robot.remoteControl()
         elif data == "t":

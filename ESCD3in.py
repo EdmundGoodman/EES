@@ -37,11 +37,11 @@ class PairESCController:
 
         self.manual_drive(0, debug=False) #self.stop()
         print("Disconnect the battery and press Enter")
-        inp = raw_input() #Add code to do relay connect/disconnect instead
+        inp = input() #Add code to do relay connect/disconnect instead
 
         self.manual_drive(self.maxValue, debug=False)
         print("Connect the battery now, you will here two beeps, then wait for a gradual falling tone then press Enter")
-        inp = raw_input() #Add sleep as necessary instead
+        inp = input() #Add sleep as necessary instead
 
         self.manual_drive(self.minValue, debug=False)
 
