@@ -261,6 +261,7 @@ class Robot:
         while True:
             data = raw_input("Step/Exit [*/x]: ")
             if data.lower() == "x":
+                self.stop()
                 return False
 
             img = self.takePhoto(resolution)
@@ -294,6 +295,7 @@ class Robot:
                 sleep(turnStepTime)
 
             self.stop() #Consider removing for cleaner runs
+
 
 
 def main():
