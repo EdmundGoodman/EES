@@ -173,7 +173,8 @@ class Robot:
 
         closestCircle = circles[0]
         xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
-        return xCentralDisplacement
+        yDisplacement = closestCircle[1]
+        return xCentralDisplacement, yDisplacement
 
     def turnToBall(self):
         #Tune these parameters to make it work better
@@ -192,6 +193,8 @@ class Robot:
 
         imgVerticalCentre = None
         flag = False
+        count = 0
+
 
         while True:
             if not flag:
@@ -206,14 +209,19 @@ class Robot:
             img = self.takePhoto(resolution)
             if imgVerticalCentre == None:
                 imgVerticalCentre = int(img.shape[1]/2)
-            turn = self.findBall(img, imgVerticalCentre, transforms, houghParams, display)
+            turn, forward = self.findBall(img, imgVerticalCentre, transforms, houghParams, display)
             print(turn)
 
             if turn is None:
                 #Drive forwards
                 print("No ball found")
-                self.forward()
-                sleep(noBallForwardTime)
+                if count < 4:
+                    self.forward()
+                    sleep(noBallForwardTime)
+                else:
+                    self.turnLeft()
+                    sleep(noBallForwardTime)
+                count += 1
 
             elif abs(turn) < turnTolerancePixels:
                 #The ball is close to central, so drive forward to pick it up
@@ -222,6 +230,7 @@ class Robot:
                 self.forward()
                 sleep(timeForwardAfterTurn)
                 #self.flyWheelsOff()
+                count = 0
 
             else:
                 #Center the closest ball
@@ -233,6 +242,7 @@ class Robot:
                     self.turnRight()
                 #print(int(turnStepTime*turn*turnScale))
                 sleep(turnStepTime)
+                count = 0
 
             if not flag:
                 self.stop() #Consider removing for cleaner runs
