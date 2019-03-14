@@ -13,7 +13,7 @@ class PairESCController:
         self.ESC, self.ESC2 = pins
 
         pi = pigpio.pi()
-        self.stop()
+        #self.stop()
         self.maxValue = 2000
         self.minValue = 1000
 
@@ -25,7 +25,7 @@ class PairESCController:
         if debug:
             print("Setting the motors to duty: {} (bigger is faster, {}<duty<{})".format(duty, self.minValue, self.maxValue))
 
-        if self.calibrated == False and doNotCalibrate == False:
+        if doNotCalibrate == False and self.calibrated == False:
             self.calibrate(test=False)
 
         pi.set_servo_pulsewidth(self.ESC,duty)
@@ -65,7 +65,7 @@ class PairESCController:
 
     def stop(self):
         #Stop the ESCs
-        self.manual_drive(0, debug=False, doNotCalibrate=False)
+        self.manual_drive(0, debug=False, doNotCalibrate=True)
 
     def stopstop(self):
         #Stop the ESCs and kill the pigpiod daemons

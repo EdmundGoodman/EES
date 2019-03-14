@@ -11,8 +11,8 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 from picamera import PiCamera
-import ESCD2in
-
+#import ESCD2in
+import ESCD3in
 
 
 class Robot:
@@ -26,13 +26,14 @@ class Robot:
         GPIO.setup(11, GPIO.OUT,initial=1)
         GPIO.setup(26, GPIO.OUT, initial=1)
         GPIO.setup(27, GPIO.OUT, initial=1)
-
+        self.ESCs = ESCD3in.PairESCController()
         #ESCD2in.calibrate()
 
     def shutdown(self):
         self.stop()
         GPIO.cleanup()
-        ESCD2in.stopstop()
+        self.ESCs.stopstop()
+        #ESCD2in.stopstop()
         print("Process Safely Stopped")
 
     def remoteControl(self):
@@ -51,8 +52,8 @@ class Robot:
 
         def on_release(key):
             self.stop()
-            #self.ESCs.stop()
-            ESCD2in.stop()
+            self.ESCs.stop()
+            #ESCD2in.stop()
             if key == Key.esc:
          	    return False
 
@@ -66,10 +67,12 @@ class Robot:
             GPIO.output(p, GPIO.LOW)
 
     def flyWheelsOn(self):
-        ESCD2in.manual_drive("1400")
+        self.ESCs.manual_drive("1400")
+        #ESCD2in.manual_drive("1400")
 
     def flyWheelsOff(self):
-        ESCD2in.manual_drive("0")
+        self.ESCs.manual_drive("0")
+        #ESCD2in.manual_drive("0")
 
     def backward(self):
         self.stop()
@@ -120,6 +123,7 @@ class Robot:
         lab = cv2.merge((l2,a,b))
         img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
         showImage(img, 'Clahe circles')
+
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         showImage(img, 'Grayscale circles')
 
@@ -173,23 +177,29 @@ class Robot:
     def turnToBall(self):
         #Tune these parameters to make it work better
         turnStepTime = 0.2
-        turnTolerancePixels = 30
+        turnTolerancePixels = 32
         timeForwardAfterTurn = 1
         noBallForwardTime = 1
 
         resolution = (480,360)
         transforms = {"clipLimit":3, "tileGridSize":(8,8),
-            "medianBlur1":7, "laplacian":5, "medianBlur2":1}
+            "medianBlur1":13, "laplacian":5, "medianBlur2":1}
         houghParams = {"dp":1,"minDist":100,"param1":50,
             "param2":65,"minRadius":30,"maxRadius":70,}
         display = True
 
         imgVerticalCentre = None
+        flag = False
+
         while True:
-            data = raw_input("Step/Exit [*/x]: ")
-            if data.lower() == "x":
-                self.stop()
-                return False
+            if not flag:
+                data = raw_input("Step/Run/Exit [*/r/x]: ").lower()
+                if data == "r":
+                    flag = True
+                    display = False
+                elif data == "x":
+                    self.stop()
+                    return False
 
             img = self.takePhoto(resolution)
             if imgVerticalCentre == None:
@@ -221,7 +231,8 @@ class Robot:
                     self.turnRight()
                 sleep(turnStepTime)
 
-            self.stop() #Consider removing for cleaner runs
+            if not flag:
+                self.stop() #Consider removing for cleaner runs
         self.stop()
 
 
@@ -231,11 +242,13 @@ def main():
 
     while True:
         os.system('clear')
-        data = raw_input("Remote control [r], Turn to ball [t]: ")
+        data = raw_input("Remote control [r], Turn to ball [t] or Exit [x]: ").lower()
         if data == "r":
             robot.remoteControl()
         elif data == "t":
             robot.turnToBall()
+        elif data == "x":
+            exit()
         else:
             pass
 
