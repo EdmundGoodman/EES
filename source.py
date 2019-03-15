@@ -182,7 +182,8 @@ class Robot:
         turnTolerancePixels = 32
         timeForwardAfterTurn = 2
         noBallForwardTime = 1
-        turnScale=0.005
+        turnScale = 0.005
+        forwardScale = 0.005
 
         resolution = (300,225)
         transforms = {"clipLimit":7, "tileGridSize":(8,8),
@@ -228,6 +229,7 @@ class Robot:
                 print("Found ball")
                 #self.flyWheelsOn()
                 self.forward()
+                print("Poss new sleep: ",int(timeForwardAfterTurn*abs(forward)*forwardScale))
                 sleep(timeForwardAfterTurn)
                 #self.flyWheelsOff()
                 count = 0
@@ -240,7 +242,7 @@ class Robot:
                 else:
                     print("Turning right")
                     self.turnRight()
-                #print(int(turnStepTime*turn*turnScale))
+                print("Poss new sleep: ",int(turnStepTime*abs(turn)*turnScale))
                 sleep(turnStepTime)
                 count = 0
 
