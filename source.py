@@ -158,7 +158,7 @@ class Robot:
         if circles is None:
             print("No circles found, try tuning the parameters")
             showImage(cimg, 'Detected circles')
-            return None
+            return None, None
 
         #Find the closest circle (lowest vertical height - so heighest vertical pixel)
         #Then give direction you need to turn to centre it in the image
@@ -181,15 +181,15 @@ class Robot:
         turnStepTime = 0.2
         turnTolerancePixels = 32
         timeForwardAfterTurn = 2
-        noBallForwardTime = 1
-        turnScale = 0.005
-        forwardScale = 0.005
+        noBallForwardTime = .2
+        turnScale = 0.01
+        forwardScale = 0.004
 
         resolution = (300,225)
         transforms = {"clipLimit":7, "tileGridSize":(8,8),
             "medianBlur1":7, "laplacian":5, "medianBlur2":3}
         houghParams = {"dp":1,"minDist":100,"param1":40,
-            "param2":50,"minRadius":5,"maxRadius":50,}
+            "param2":47,"minRadius":5,"maxRadius":50,}
         display = True
 
         imgVerticalCentre = None
@@ -202,7 +202,7 @@ class Robot:
                 data = raw_input("Step/Run/Exit [*/r/x]: ").lower()
                 if data == "r":
                     flag = True
-                    #display = False
+                    display = False
                 elif data == "x":
                     self.stop()
                     return False
@@ -217,10 +217,10 @@ class Robot:
                 #Drive forwards
                 print("No ball found")
                 if count < 4:
-                    self.forward()
+                    self.turnLeft()
                     sleep(noBallForwardTime)
                 else:
-                    self.turnLeft()
+                    self.forward()
                     sleep(noBallForwardTime)
                 count += 1
 
@@ -229,7 +229,7 @@ class Robot:
                 print("Found ball")
                 #self.flyWheelsOn()
                 self.forward()
-                print("Poss new sleep: ",int(timeForwardAfterTurn*abs(forward)*forwardScale))
+                print("Poss new sleep: ",float(timeForwardAfterTurn*abs(forward)*forwardScale))
                 sleep(timeForwardAfterTurn)
                 #self.flyWheelsOff()
                 count = 0
@@ -242,8 +242,9 @@ class Robot:
                 else:
                     print("Turning right")
                     self.turnRight()
-                print("Poss new sleep: ",int(turnStepTime*abs(turn)*turnScale))
-                sleep(turnStepTime)
+                #print("Poss new sleep: ",float(turnStepTime*abs(turn)*turnScale))
+                sleepTime = float(turnStepTime*abs(turn)*turnScale)
+                sleep(sleepTime) #sleep(turnStepTime)
                 count = 0
 
             if not flag:
