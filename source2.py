@@ -104,6 +104,8 @@ class Robot:
 		"""A function that takes an img (and any other optional params)
 		   and returns the centre of the position of the nearest ball
 		"""
+		greenLower, greenUpper = (22, 86, 20), (40, 255, 255)
+
 		#blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 		hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 		#Construct a mask for the color "green", then perform smooth it to remove noise
@@ -143,12 +145,10 @@ class Robot:
 		print("Turning towards and collecting balls")
 		vs = PiVideoStream().start(brightness=65,contrast=30)
 		sleep(2) #Allow the stream to setup
-		greenLower, greenUpper = (22, 86, 20), (40, 255, 255)
-		count, bad, activated = 0, 0, 0
+		bad, activated = 0, 0
 
 		try:
 			while True:
-				count += 1
 				#Grab the frame from the threaded video stream and resize it to have a maximum width of 400 pixels
 				startImgAnalysis = time()
 				frame = vs.read()
