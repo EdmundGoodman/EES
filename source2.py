@@ -153,6 +153,13 @@ class Robot:
 				startImgAnalysis = time()
 				frame = vs.read()
 				frame = imutils.resize(frame, width=600)
+
+                cv2.imshow("Analysed frame",frame)
+    			cv2.waitKey(0)
+    			cv2.destroyAllWindows()
+
+                _ = raw_input()
+
 				center = self.findBall(frame)
 				endImgAnalysis = time()
 
