@@ -172,9 +172,10 @@ class Robot:
             showImage(cimg,'Detected circles')
 
         closestCircle = circles[0]
-        xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
+        return closestCircle
+        """xCentralDisplacement = -1*(imgVerticalCentre - closestCircle[0])
         yDisplacement = closestCircle[1]
-        return xCentralDisplacement, yDisplacement
+        return xCentralDisplacement, yDisplacement"""
 
     def turnToBall(self):
         #Tune these parameters to make it work better
