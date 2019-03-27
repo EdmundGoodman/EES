@@ -23,7 +23,8 @@ class PairESCController:
     def manual_drive(self, duty, debug=True, doNotCalibrate=True):
         #Set the ESC PWM duty
         if debug:
-            print("Setting the motors to duty: {} (bigger is faster, {}<duty<{})".format(duty, self.minValue, self.maxValue))
+            print("Setting the motors to duty: {}".format(duty))
+            #print("Setting the motors to duty: {} (bigger is faster, {}<duty<{})".format(duty, self.minValue, self.maxValue))
 
         if doNotCalibrate == False and self.calibrated == False:
             self.calibrate(test=False)
@@ -35,7 +36,7 @@ class PairESCController:
         #Calibrate the ESC to allow it to drive
         #Note that this almost certainly has uncessary sleeps in
 
-        self.manual_drive(0, debug=False) #self.stop()
+        self.stop()
         print("Disconnect the battery and press Enter")
         inp = input() #Add code to do relay connect/disconnect instead
 
@@ -45,13 +46,12 @@ class PairESCController:
 
         self.manual_drive(self.minValue, debug=False)
 
-        #Do we even need this step? We've already done it before
-        if 1:
-            print("You should another tone from every motor")
-            for i in range(13):
-                print("{} seconds till next process (note, we can probably reduce this)".format(13-i))
-                sleep(1)
-            self.manual_drive(0, debug=False) #self.stop()
+        print("You should another tone from every motor")
+        for i in range(13):
+            if i%5==0:
+                print("{} seconds till next process".format(13-i))
+            sleep(1)
+        self.stop()
 
         self.calibrated = True
         sleep(2)
