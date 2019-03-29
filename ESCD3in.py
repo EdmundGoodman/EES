@@ -49,7 +49,7 @@ class PairESCController:
         if 1:
             print("You should another tone from every motor")
             for i in range(13):
-                print("{} seconds till next process (note, we can probably reduce this)".format(13-i))
+                print("{} seconds till next process".format(13-i))
                 sleep(1)
             self.manual_drive(0, debug=False) #self.stop()
 

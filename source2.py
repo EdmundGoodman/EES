@@ -40,7 +40,7 @@ class Robot:
 
     def remoteControl(self):
         from pynput.keyboard import Key, Listener
-        flag = False
+        self.flag = False
 
         def on_press(key):
             if key == Key.down:
@@ -51,13 +51,13 @@ class Robot:
                 self.turnRight()
             if key == Key.left:
                 self.turnLeft()
-                if key == Key.space:
-                    if flag == False:
-                        self.flyWheelsOn()
-                        flag = True
-                    else:
-                        self.flyWheelsOff()
-                        flag = False
+            if key == Key.space:
+                if self.flag == False:
+                    self.flyWheelsOn()
+                    self.flag = True
+                else:
+                    self.flyWheelsOff()
+                    self.flag = False
 
         def on_release(key):
             self.stop()
@@ -75,7 +75,7 @@ class Robot:
             GPIO.output(p, GPIO.LOW)
 
     def flyWheelsOn(self):
-        self.ESCs.manual_drive("1400")
+        self.ESCs.manual_drive("1300")
 
     def flyWheelsOff(self):
         self.ESCs.manual_drive("0")
@@ -165,12 +165,14 @@ class Robot:
                 if center is None: #If no balls (of the right size) are found
                     print("No balls found")
                     if activated == 0:
-                        pass
+                        self.forward()
+                        sleep(.5)
+                        self.stop()
                     else:
                         bad += 1
                     if bad > 30:
                         print("Activate nulled")
-                        #self.flyWheelsOff()
+                        self.flyWheelsOff()
                         self.turnLeft()
                         bad = 0
                         activated = 0
@@ -179,7 +181,7 @@ class Robot:
                     if activated == 0:
                         self.stop()
                         sleep(2)
-                        #self.flyWheelsOn()
+                        self.flyWheelsOn()
                         self.forward()
                         activated = 1
                     x, y = center[0], center[1]
@@ -207,9 +209,11 @@ def main():
 
     while True:
         os.system('clear')
-        data = input("Remote control [r], Turn to ball [t] or Exit [x]: ").lower()
+        data = input("Remote control [r], Calibrate [c] Turn to ball [t] or Exit [x]: ").lower()
         if data == "r":
             robot.remoteControl()
+        if data == "c":
+            robot.ESCs.calibrate()
         elif data == "t":
             robot.turnToBall()
         elif data == "x":
