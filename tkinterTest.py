@@ -3,9 +3,9 @@ from tkinter.ttk import Radiobutton
 from tkinter import messagebox, Scale
 import atexit
 
-#import source2
+import source2
 
-class Robot:
+"""class Robot:
     def forward(self):
         pass
 
@@ -28,7 +28,7 @@ class Robot:
         pass
 
     def flyWheelsOff(self):
-        pass
+        pass"""
 
 
 class NoHoverButton(tk.Button):

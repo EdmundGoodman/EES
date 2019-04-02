@@ -2,6 +2,7 @@ from pivideostream2 import PiVideoStream
 from time import sleep, time
 from PIL import Image
 import numpy as np
+import random
 import atexit
 import math
 import cv2
@@ -21,6 +22,7 @@ import ESCD3in
 import pixy
 from ctypes import *
 from pixy import *
+
 import VL53L1X
 
 class Blocks (Structure):
@@ -35,9 +37,12 @@ class Blocks (Structure):
 
 class Robot:
     def __init__(self):
+        """Initialise the robot, by setting it up, and performing any other
+        necessary procedures"""
         self.setup()
 
     def setup(self):
+        """Initialise all the GPIO pins, and create an ESC & a TOF object"""
         for i in range(14,20):
             GPIO.setup(i,GPIO.OUT,initial=1)
         GPIO.setup(8,GPIO.OUT,initial=1)
@@ -45,15 +50,22 @@ class Robot:
         GPIO.setup(26, GPIO.OUT, initial=1)
         GPIO.setup(27, GPIO.OUT, initial=1)
         self.ESCs = ESCD3in.PairESCController()
-        #self.ESCs.calibrate()
+
+        self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
+        self.tof.open()
+        self.tof.start_ranging(1) # Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
 
     def shutdown(self):
+        """Fully shutdown the robot, i.e. powering of the motors, the ESCs,
+        the TOF, and clean up to GPIO pins"""
         self.stop()
-        GPIO.cleanup()
         self.ESCs.stopstop()
+        self.tof.stop_ranging()
+        GPIO.cleanup()
         print("Process Safely Stopped")
 
     def remoteControl(self):
+        """Remote control the robot from the command line"""
         from pynput.keyboard import Key, Listener
         self.flag = False
 
@@ -73,6 +85,8 @@ class Robot:
                 else:
                     self.flyWheelsOff()
                     self.flag = False
+            if key == Key.tab:
+                print(self.getDistance())
 
         def on_release(key):
             self.stop()
@@ -84,38 +98,59 @@ class Robot:
                 listener.join()
 
     def toggleGPIOPins(self, highPins, lowPins):
+        """Toggle the given GPIO pins
+        Parameter 1: highPins [list]; set pins in this list to a high logical value
+        Parameter 2: lowPins [list]; set pins in this list to low logical value"""
         for p in highPins:
             GPIO.output(p, GPIO.HIGH)
         for p in lowPins:
             GPIO.output(p, GPIO.LOW)
 
-    def flyWheelsOn(self):
-        self.ESCs.manual_drive("1300")
+    def flyWheelsOn(self, duty="1300"):
+        """Set the duty of the ESCs to a given value
+        Parameter 1: duty [string]; set the duty of both ESCs to this value"""
+        self.ESCs.manual_drive(str(duty))
 
     def flyWheelsOff(self):
+        """Set the duty of the ESCs to 0 - i.e. turn them off"""
         self.ESCs.manual_drive("0")
 
     def backward(self):
+        """Drive the robot backwards"""
         self.stop()
         self.toggleGPIOPins(highPins=[26,27,8,11], lowPins=[16,19])
 
     def forward(self):
+        """Drive the robot forwards"""
         self.stop()
         self.toggleGPIOPins(highPins=[], lowPins=[26,27,8,11,16,19])
 
     def turnRight(self):
+        """Turn the robot right"""
         self.stop()
         self.toggleGPIOPins(highPins=[8,11], lowPins=[26,27,16,19])
 
     def turnLeft(self):
+        """Turn the robot left"""
         self.stop()
         self.toggleGPIOPins(highPins=[26,27], lowPins=[8,11,16,19])
 
     def stop(self):
+        """Stop the robot"""
         self.toggleGPIOPins(highPins=list(range(14,20))+[8,11,26,27], lowPins=[])
 
+    def getDistance(self):
+        """Get the distance from the TOF sensor to the nearest obstacle
+        Return 1: distance [int]; the distance to the nearest obstacle"""
+        return self.tof.get_distance()
 
     def getBlocks(self):
+        """Get various information about the most prominent circle in the image
+        Return 1: centrex [int]; the x centre of the nearest circle
+        Return 2: centrey [int]; the y centre of the nearest circle
+        Return 3: blockWidth [int];
+        Return 4: blockHeight [int];
+        """
         blocks = BlockArray(100)
         count = pixy.ccc_get_blocks(100, blocks)
         if count > 0:
@@ -126,13 +161,15 @@ class Robot:
         return None,None,None,None,None
 
     def turnToFace(self):
+        """Turn the robot to face towards the most prominent circle
+        in front of it"""
         try:
             u,x,y,width,height = self.getBlocks()
             if x is None:
                 self.turnLeft()
-                time.sleep(0.4)
+                sleep(0.4)
                 self.stop()
-                time.sleep(1)
+                sleep(1)
             if x > 180:
                 self.turnRight()
                 while x > 210:
@@ -148,36 +185,76 @@ class Robot:
             return False
 
     def getBall(self):
+        """Collect any ball in front of the robot
+        """
         try:
-            time.sleep(1)
+            sleep(1)
             if not self.turnToFace():
                 return False
             u,x,y,width,height = self.getBlocks()
 
             self.forward()
-            time.sleep(0.5)
+            sleep(0.5)
             self.flyWheelsOn()
 
             while x is not None:
-                u,x,y,width,height = robot.getBlocks()
-            time.sleep(1.7)
-            robot.flyWheelsOff()
+                u,x,y,width,height = self.getBlocks()
+            sleep(1.7)
+            self.flyWheelsOff()
 
         except TypeError:
-            robot.flyWheelsOff()
-            robot.stop()
+            self.flyWheelsOff()
+            self.stop()
             print("Couldn't see a ball")
-            time.sleep(1)
+            sleep(1)
             return False
 
+    def dontCrash(self, prevTurn):
+        """Allow the robot to avoid walls, by randomly turning away from them
+        if detected
+        """
+        if self.getDistance() < 1500: #If the wall is less than a meter away
+            if prevTurn is None:
+                if random.choice([0,1]):
+                    self.turnLeft()
+                    prevTurn = 1
+                else:
+                    self.turnRight()
+                    prevTurn = 0
+            else:
+                if prevTurn:
+                    self.turnLeft()
+                else:
+                    self.turnRight()
+        else:
+            prevTurn = None
+
+        turnTime = random.uniform(0.5, 1.5)
+        sleep(turnTime)
+        self.stop()
+
+        return prevTurn
+
     def autonomous(self):
+        """Autonomously collect balls
+        """
+        prevTurn, count = None, 0
         while True:
-            u,x,y,width,height = robot.getBlocks()
+
+            prevTurn = dontCrash()
+
+            u,x,y,width,height = self.getBlocks() #Return the center of the nearest ball
             if x is not None:
                 self.stop()
                 self.getBall()
             else:
                 self.turnRight()
+                count += 1
+
+            if count > random.randint(1000,2000): #If the robot has turned in a full circle
+                self.forward()
+                sleep(2)
+                self.stop()
 
 
 def main():
