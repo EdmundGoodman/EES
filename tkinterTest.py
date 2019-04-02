@@ -3,7 +3,33 @@ from tkinter.ttk import Radiobutton
 from tkinter import messagebox, Scale
 import atexit
 
-import source2
+#import source2
+
+class Robot:
+    def forward(self):
+        pass
+
+    def turnLeft(self):
+        pass
+
+    def turnRight(self):
+        pass
+
+    def backward(self):
+        pass
+
+    def stop(self):
+        pass
+
+    def shutdown(self):
+        pass
+
+    def flyWheelsOn(self):
+        pass
+
+    def flyWheelsOff(self):
+        pass
+
 
 class NoHoverButton(tk.Button):
     def __init__(self, master, **kw):
@@ -24,7 +50,7 @@ class App:
         self.root = tk.Tk()
 
         self.robot = Robot()
-        atexit.register(robot.shutdown)
+        atexit.register(self.robot.shutdown)
 
         self.TITLE = "Robot control"
         self.root.title = self.TITLE
