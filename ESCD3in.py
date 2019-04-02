@@ -52,7 +52,6 @@ class PairESCController:
                 print("{} seconds till next process".format(13-i))
             sleep(1)
         self.stop()
-
         self.calibrated = True
         sleep(2)
 
