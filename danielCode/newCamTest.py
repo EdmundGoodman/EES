@@ -27,6 +27,7 @@ count = 0
 robot.TurnLeft()
 bad = 0
 activated = 0
+FLysOn = 0
 try:
 	while True:
 		start = time.time()
@@ -64,20 +65,20 @@ try:
 			M = cv2.moments(c)
 			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 			# only proceed if the radius meets a minimum size
-			if radius > 10:
+			if radius > 10 and radius < 20:
 				if activated == 2:
 					activated = 1
 				if activated == 0:
 					robot.Stop()
 					time.sleep(0.5)
 					activated  = 2
-					robot.FlyWheelsOn()
+					#robot.FlyWheelsOn()
 					robot.Forward()
 				print(center[0])
 				
-				if activated == 1 and abs(334-center[0]) > 50:
+				if activated == 2 and abs(334-center[0]) > 100:
 					x = center[0]
-					timeToTurn = (((x-0)/(668-0))*(0.3--0.3)) + - 0.3
+					timeToTurn = (((x-0)/(668-0))*(0.6--0.6)) + - 0.6
 					if timeToTurn > 0:
 						robot.TurnRight()
 						time.sleep(abs(timeToTurn))
@@ -85,7 +86,10 @@ try:
 						robot.TurnLeft()
 						time.sleep(abs(timeToTurn))
 					robot.Forward()
-					
+				print(center[1],"y")
+				if activated == 1 and center[1] < 250 and FLysOn == 0:
+					robot.FlyWheelsOn()
+					FlysOn = 1
 					
 		
 				# draw the circle and centroid on the frame,
@@ -94,29 +98,37 @@ try:
 					(0, 255, 255), 2)
 				cv2.circle(frame, center, 5, (0, 0, 255), -1)'''
 			else:
+				print("no tennis ball")
 				if activated != 1 and activated != 2:
 					pass
 				else:
 					bad += 1
-				if bad > 30:
+					print(bad,"Bad")
+				if bad > 20:
 					print("Activate nulled")
 					robot.Stop()
 					robot.FlyWheelsOff()
 					robot.TurnLeft()
 					bad = 0
 					activated = 0
+					FLysOn = 0
+					time.sleep(10)
 		else:
+			print("no tennis ball")
 			if activated != 1 and activated != 2:
 				pass
 			else:
 				bad += 1
-			if bad > 30:
+				print(bad,"bad")
+			if bad > 20:
 				print("Activate nulled")
 				robot.Stop()
 				robot.FlyWheelsOff()
 				robot.TurnLeft()
 				bad = 0
 				activated = 0
+				FlysOn = 0
+				time.sleep(10)
 		# update the points queu
 
 		# show the frame to our screen

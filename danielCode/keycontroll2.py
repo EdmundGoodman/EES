@@ -16,7 +16,6 @@ def on_press(key):
 		robot.FlyWheelsOn()
 	if key == Key.shift:
 		robot.FlyWheelsOff()
-
 def on_release(key):
 	robot.Stop()
 	if key == Key.esc:
