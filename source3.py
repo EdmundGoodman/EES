@@ -118,26 +118,26 @@ class Robot:
     def backward(self):
         """Drive the robot backwards"""
         self.stop()
-        self.toggleGPIOPins(highPins=[26,27,8,11], lowPins=[16,19])
+        self.toggleGPIOPins(highPins=[26,27,8,11], lowPins=[16,13])
 
     def forward(self):
         """Drive the robot forwards"""
         self.stop()
-        self.toggleGPIOPins(highPins=[], lowPins=[26,27,8,11,16,19])
+        self.toggleGPIOPins(highPins=[], lowPins=[26,27,8,11,16,13])
 
     def turnRight(self):
         """Turn the robot right"""
         self.stop()
-        self.toggleGPIOPins(highPins=[8,11], lowPins=[26,27,16,19])
+        self.toggleGPIOPins(highPins=[8,11], lowPins=[26,27,16,13])
 
     def turnLeft(self):
         """Turn the robot left"""
         self.stop()
-        self.toggleGPIOPins(highPins=[26,27], lowPins=[8,11,16,19])
+        self.toggleGPIOPins(highPins=[26,27], lowPins=[8,11,16,13])
 
     def stop(self):
         """Stop the robot"""
-        self.toggleGPIOPins(highPins=list(range(14,20))+[8,11,26,27], lowPins=[])
+        self.toggleGPIOPins(highPins=list(range(13,20))+[8,11,26,27], lowPins=[])
 
     def getDistance(self):
         """Get the distance from the TOF sensor to the nearest obstacle
@@ -160,101 +160,37 @@ class Robot:
             return 1,centerx, centery, blocks[index].m_width, blocks[index].m_height
         return None,None,None,None,None
 
-    def turnToFace(self):
-        """Turn the robot to face towards the most prominent circle
-        in front of it"""
-        try:
-            u,x,y,width,height = self.getBlocks()
-            if x is None:
-                self.turnLeft()
-                sleep(0.4)
-                self.stop()
-                sleep(1)
-            if x > 180:
-                self.turnRight()
-                while x > 210:
-                    u,x,y,width,height = self.getBlocks()
-                self.stop()
-            elif x < 180:
-                self.turnLeft()
-                while x < 150:
-                    u,x,y,width,height = self.getBlocks()
-                self.stop()
-            return True
-        except TypeError:
-            return False
-
-    def getBall(self):
-        """Collect any ball in front of the robot
-        """
-        try:
-            sleep(1)
-            if not self.turnToFace():
-                return False
-            u,x,y,width,height = self.getBlocks()
-
-            self.forward()
-            sleep(0.5)
-            self.flyWheelsOn()
-
-            while x is not None:
-                u,x,y,width,height = self.getBlocks()
-            sleep(1.7)
-            self.flyWheelsOff()
-
-        except TypeError:
-            self.flyWheelsOff()
-            self.stop()
-            print("Couldn't see a ball")
-            sleep(1)
-            return False
-
-    def dontCrash(self, prevTurn):
-        """Allow the robot to avoid walls, by randomly turning away from them
-        if detected
-        """
-        if self.getDistance() < 1500: #If the wall is less than a meter away
-            if prevTurn is None:
-                if random.choice([0,1]):
-                    self.turnLeft()
-                    prevTurn = 1
-                else:
-                    self.turnRight()
-                    prevTurn = 0
-            else:
-                if prevTurn:
-                    self.turnLeft()
-                else:
-                    self.turnRight()
-        else:
-            prevTurn = None
-
-        turnTime = random.uniform(0.5, 1.5)
-        sleep(turnTime)
-        self.stop()
-
-        return prevTurn
-
     def autonomous(self):
         """Autonomously collect balls
         """
-        prevTurn, count = None, 0
         while True:
-
-            #prevTurn = dontCrash()
-
-            u,x,y,width,height = self.getBlocks() #Return the center of the nearest ball
+            u,x,y,width,height = robot.getBlocks()
             if x is not None:
-                self.stop()
-                self.getBall()
+                if x < 260 and x > 150: #If the ball is central
+                    """
+                    #print(y)
+                    self.stop()
+                    self.forward()
+                    sleep(0.5)
+                    self.flyWheelsOn()
+                    sleep(2)
+                    self.flyWheelsOff()
+                    self.stop()
+                    """
+
+                    self.stop()
+                    self.flyWheelsOn()
+                    if y < 100:
+                        sleep(0.5)
+                    self.forward()
+                    #sleep(2.5)
+                    while x is not None:
+                        u,x,y,width,height = robot.getBlocks()
+                    sleep(0.5)
+                    self.flyWheelsOff()
+                    self.stop()
             else:
                 self.turnRight()
-                count += 1
-
-            """if count > random.randint(1000,2000): #If the robot has turned in a full circle
-                self.forward()
-                sleep(2)
-                self.stop()"""
 
 
 def main():
