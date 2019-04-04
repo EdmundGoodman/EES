@@ -160,14 +160,13 @@ class Robot:
             return 1,centerx, centery, blocks[index].m_width, blocks[index].m_height
         return None,None,None,None,None
 
-    def autonomous(self):
+    def autonomousOld(self):
         """Autonomously collect balls
         """
         while True:
             u,x,y,width,height = robot.getBlocks()
             if x is not None:
                 if x < 260 and x > 150: #If the ball is central
-                    """
                     #print(y)
                     self.stop()
                     self.forward()
@@ -176,21 +175,69 @@ class Robot:
                     sleep(2)
                     self.flyWheelsOff()
                     self.stop()
-                    """
+            else:
+                self.turnRight()
 
+    def isAboutToCrash(self, threshold=1000):
+        """Check if the distance between a robot and a detected obstacle
+        is below a threshold
+        Return 1: answer [boolean]; is the robot about to crash"""
+        return self.getDistance()<threshold
+
+    def avoidWall(self, direction=None):
+        """Turn in a random (or specified) direction to avoid the wall,
+        then keep turning for another random period of time
+        Parameter 1: direction [int] (optional); the direction in which to turn
+        """
+        direction = random.choice([0,1]) if direction is None else direction
+
+        while isAboutToCrash():
+            if direction == 0:
+                self.turnRight()
+            else:
+                self.turnLeft()
+
+        latencyPeriod = random.uniform(0.2,1.5)
+        sleep(latencyPeriod)
+
+        self.stop()
+
+    def autonomous(self):
+        """Autonomously collect balls
+        Continuously drive forward, unless:
+         - you see a ball, in which case turn to pick it up
+         - you are too close to a wall, in case turn randomly to avoid it
+        """
+        while True:
+            if self.isAboutToCrash():
+                self.avoidWall()
+
+            u,x,y,width,height = robot.getBlocks()
+            if x is not None:
+                if x < 260 and x > 150: #If the ball is central, collect it
                     self.stop()
                     self.flyWheelsOn()
+                    #If the the ball is too close, wait to spin up the flywheels
                     if y < 100:
                         sleep(0.5)
+                    #Drive forward until the ball is out of view for at least 0.5 seconds
                     self.forward()
-                    #sleep(2.5)
                     while x is not None:
                         u,x,y,width,height = robot.getBlocks()
+                        if self.isAboutToCrash():
+                            #Stop driving forward, and defer the avoidance to the
+                            #beginning of the loop
+                            self.stop()
+                            continue
                     sleep(0.5)
                     self.flyWheelsOff()
                     self.stop()
+                elif x < 150: #If the ball is to the right, turn right
+                    self.turnRight()
+                elif x > 260: #If the ball is to the left, turn left
+                    self.turnLeft()
             else:
-                self.turnRight()
+                self.forward()
 
 
 def main():
