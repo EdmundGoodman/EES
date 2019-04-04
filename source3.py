@@ -241,7 +241,7 @@ class Robot:
         prevTurn, count = None, 0
         while True:
 
-            prevTurn = dontCrash()
+            #prevTurn = dontCrash()
 
             u,x,y,width,height = self.getBlocks() #Return the center of the nearest ball
             if x is not None:
@@ -251,10 +251,10 @@ class Robot:
                 self.turnRight()
                 count += 1
 
-            if count > random.randint(1000,2000): #If the robot has turned in a full circle
+            """if count > random.randint(1000,2000): #If the robot has turned in a full circle
                 self.forward()
                 sleep(2)
-                self.stop()
+                self.stop()"""
 
 
 def main():
