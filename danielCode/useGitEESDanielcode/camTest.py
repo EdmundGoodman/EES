@@ -1,13 +1,17 @@
 from robotFunctions import *
 import time
-def TurnToFace(robot):
+def TurnToFace():
     try:
         u,x,y,width,height = robot.getBlocks()
         if x is None:
-            robot.TurnLeft()
-            time.sleep(0.4)
+            #robot.TurnLeft()
+            time.sleep(0.2)
             robot.Stop()
             time.sleep(1)
+        for i in range(40):
+            u,x,y,width,height = robot.getBlocks()
+            if x is not None:
+                break
         if x > 180:
             robot.TurnRight()
             while x > 210:
@@ -20,9 +24,10 @@ def TurnToFace(robot):
             robot.Stop()
         return True
     except TypeError:
+        print("lost it")
         return False
 
-def GetBall(robot):
+def GetBall():
     try:
         time.sleep(1)
         if not TurnToFace(robot):
@@ -53,6 +58,6 @@ while True:
     u,x,y,width,height = robot.getBlocks()
     if x is not None:
         robot.Stop()
-        GetBall(robot)
+        GetBall()
     else:
         robot.TurnRight()
