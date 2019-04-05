@@ -43,7 +43,7 @@ class Robot:
 
     def setup(self):
         """Initialise all the GPIO pins, and create an ESC & a TOF object"""
-        for i in range(14,20):
+        for i in range(13,20):
             GPIO.setup(i,GPIO.OUT,initial=1)
         GPIO.setup(8,GPIO.OUT,initial=1)
         GPIO.setup(11, GPIO.OUT,initial=1)
