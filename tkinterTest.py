@@ -3,7 +3,7 @@ from tkinter.ttk import Radiobutton
 from tkinter import messagebox, Scale
 import atexit
 
-import source2
+from source3 import *
 
 """class Robot:
     def forward(self):
@@ -71,7 +71,7 @@ class App:
 
     def main(self):
         self.flywheelsFlag = 0
-        self.flywheelsDuty = 1400
+        self.flywheelsDuty = 1130
 
         def toggleFlywheels(event=None):
             self.flywheelsFlag = (self.flywheelsFlag+1)%2
@@ -84,7 +84,7 @@ class App:
 
             if self.flywheelsFlag:
                 #Change source2 api to include variable flywheel duty
-                self.robot.flyWheelsOn() #self.flywheelsDuty)
+                self.robot.flyWheelsOn(self.flywheelsDuty)
             else:
                 self.robot.flyWheelsOff()
 

@@ -106,7 +106,7 @@ class Robot:
         for p in lowPins:
             GPIO.output(p, GPIO.LOW)
 
-    def flyWheelsOn(self, duty="1300"):
+    def flyWheelsOn(self, duty="1130"):
         """Set the duty of the ESCs to a given value
         Parameter 1: duty [string]; set the duty of both ESCs to this value"""
         self.ESCs.manual_drive(str(duty))
@@ -189,6 +189,7 @@ class Robot:
         then keep turning for another random period of time
         Parameter 1: direction [int] (optional); the direction in which to turn
         """
+        self.stop()
         direction = random.choice([0,1]) if direction is None else direction
 
         while isAboutToCrash():
@@ -208,6 +209,7 @@ class Robot:
          - you see a ball, in which case turn to pick it up
          - you are too close to a wall, in case turn randomly to avoid it
         """
+        flag = 0
         while True:
             if self.isAboutToCrash():
                 self.avoidWall()
@@ -215,6 +217,7 @@ class Robot:
             u,x,y,width,height = self.getBlocks()
             if x is not None:
                 if x < 260 and x > 150: #If the ball is central, collect it
+                
                     self.stop()
                     self.flyWheelsOn()
                     #If the the ball is too close, wait to spin up the flywheels
@@ -230,14 +233,23 @@ class Robot:
                             self.stop()
                             continue
                     sleep(0.5)
+                    while 0: #opto switch
+                        pass
+                    
                     self.flyWheelsOff()
                     self.stop()
+                
                 elif x < 150: #If the ball is to the right, turn right
                     self.turnRight()
                 elif x > 260: #If the ball is to the left, turn left
                     self.turnLeft()
             else:
-                self.forward()
+                if random.uniform(0,10) < 0.5:
+                    flag = (flag+1)%2
+                if flag:    
+                    self.forward()
+                else:
+                    self.right()
 
 
 def main():
