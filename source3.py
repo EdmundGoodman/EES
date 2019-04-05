@@ -164,7 +164,7 @@ class Robot:
         """Autonomously collect balls
         """
         while True:
-            u,x,y,width,height = robot.getBlocks()
+            u,x,y,width,height = self.getBlocks()
             if x is not None:
                 if x < 260 and x > 150: #If the ball is central
                     #print(y)
@@ -212,7 +212,7 @@ class Robot:
             if self.isAboutToCrash():
                 self.avoidWall()
 
-            u,x,y,width,height = robot.getBlocks()
+            u,x,y,width,height = self.getBlocks()
             if x is not None:
                 if x < 260 and x > 150: #If the ball is central, collect it
                     self.stop()
@@ -223,7 +223,7 @@ class Robot:
                     #Drive forward until the ball is out of view for at least 0.5 seconds
                     self.forward()
                     while x is not None:
-                        u,x,y,width,height = robot.getBlocks()
+                        u,x,y,width,height = self.getBlocks()
                         if self.isAboutToCrash():
                             #Stop driving forward, and defer the avoidance to the
                             #beginning of the loop
@@ -251,8 +251,8 @@ def main():
             robot.remoteControl()
         if data == "c":
             robot.ESCs.calibrate()
-        elif data == "t":
-            robot.autonomous()
+        elif data == "a":
+            robot.autonomousOld()
         elif data == "x":
             exit()
         else:
