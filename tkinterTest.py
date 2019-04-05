@@ -1,14 +1,14 @@
-#from source3 import *
+from source3 import *
 
 import tkinter as tk
 from tkinter.ttk import Radiobutton
 from tkinter import messagebox, Scale
-import atexit
-
-from time import time, sleep
 import threading
 
-class Robot:
+#import atexit
+#from time import time, sleep
+
+"""class Robot:
     def forward(self):
         pass
 
@@ -34,7 +34,7 @@ class Robot:
         pass
 
     def getDistance(self):
-        return int(round(time(), 0))
+        return int(round(time(), 0))"""
 
 
 class NoHoverButton(tk.Button):
