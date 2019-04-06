@@ -67,6 +67,8 @@ class App:
         self.main()
 
     def getNewFrame(self):
+        """Create a new frame
+        Return 1: frame [tk.Frame]; the App frame"""
         #Create a Frame
         frame = tk.Frame(self.root, width=600, height=300)
         frame.pack(fill="both", expand=True)
@@ -74,6 +76,7 @@ class App:
         return frame
 
     def videoLoop(self):
+        """Update the distance"""
         try:
             while not self.stopEvent.is_set():
                 #Get the distance
@@ -84,10 +87,13 @@ class App:
 
 
     def main(self):
+        """Produce the app window"""
+
         self.flywheelsFlag = 0
         self.flywheelsDuty = 1130
 
         def toggleFlywheels(event=None):
+            """Toggle the flywheels and the button colour"""
             self.flywheelsFlag = (self.flywheelsFlag+1)%2
             self.flywheelsDuty = self.slider.get()
             if self.flywheelsFlag:
@@ -132,8 +138,6 @@ class App:
         self.flwheels.bind("<ButtonPress>", toggleFlywheels)
 
 
-
-
         self.calibrate = NoHoverButton(self.frame, text="Calibrate\nflywheels") #, height=5, width=5)
         self.calibrate.grid(column=3, row=1)
         self.calibrate.bind("<ButtonPress>", lambda x: unclicked) #self.robot.flywheels.calibrate())
@@ -150,12 +154,10 @@ class App:
         self.thread = threading.Thread(target=self.videoLoop, args=())
         self.thread.start()
 
-
-
     def close(self):
+        """Shutdown the robot, and close the app window"""
         self.stopEvent.set()
-        self.robot.stop()
-        self.robot.flyWheelsOff()
+        self.robot.shutdown()
         messagebox.showerror('Closing window!', 'You are closing the window')
         exit()
 

@@ -1,7 +1,7 @@
-from pivideostream2 import PiVideoStream
+#from pivideostream2 import PiVideoStream
 from time import sleep, time
-from PIL import Image
-import numpy as np
+#from PIL import Image
+#import numpy as np
 import random
 import atexit
 import math
@@ -9,10 +9,10 @@ import cv2
 import io
 import os
 
-from picamera.array import PiRGBArray
-from imutils.video import FPS
-from picamera import PiCamera
-import imutils
+#from picamera.array import PiRGBArray
+#from imutils.video import FPS
+#from picamera import PiCamera
+#import imutils
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
@@ -108,7 +108,7 @@ class Robot:
 
     def flyWheelsOn(self, duty="1130"):
         """Set the duty of the ESCs to a given value
-        Parameter 1: duty [string]; set the duty of both ESCs to this value"""
+        Optional parameter 1: duty [string]; set the duty of both ESCs to this value"""
         self.ESCs.manual_drive(str(duty))
 
     def flyWheelsOff(self):
@@ -144,6 +144,12 @@ class Robot:
         Return 1: distance [int]; the distance to the nearest obstacle"""
         return self.tof.get_distance()
 
+    def getOptoSwitch(self):
+        """Get the value of the opto switch in the chute, unimplemented, so always True
+        Return 1: value [boolean]; whether the opto switch is tripeed
+        """
+        return True
+
     def getBlocks(self):
         """Get various information about the most prominent circle in the image
         Return 1: centrex [int]; the x centre of the nearest circle
@@ -160,8 +166,9 @@ class Robot:
             return 1,centerx, centery, blocks[index].m_width, blocks[index].m_height
         return None,None,None,None,None
 
-    def autonomousOld(self):
-        """Autonomously collect balls
+    def autonomousTest(self):
+        """Drive continuously in a circle, and collect any balls that are seen
+        whilst turning
         """
         while True:
             u,x,y,width,height = self.getBlocks()
@@ -187,7 +194,7 @@ class Robot:
     def avoidWall(self, direction=None):
         """Turn in a random (or specified) direction to avoid the wall,
         then keep turning for another random period of time
-        Parameter 1: direction [int] (optional); the direction in which to turn
+        Optional parameter 1: direction [int]; the direction in which to turn
         """
         self.stop()
         direction = random.choice([0,1]) if direction is None else direction
@@ -209,7 +216,7 @@ class Robot:
          - you see a ball, in which case turn to pick it up
          - you are too close to a wall, in case turn randomly to avoid it
         """
-        flag = 0
+        directionFlag = 0 #0: drive forwards, 1: turn right
         while True:
             if self.isAboutToCrash():
                 self.avoidWall()
@@ -217,42 +224,64 @@ class Robot:
             u,x,y,width,height = self.getBlocks()
             if x is not None:
                 if x < 260 and x > 150: #If the ball is central, collect it
-                
+
                     self.stop()
+
+                    #Spin up the flywheels, speed up by doing highest first
+                    self.flyWheelsOn("2000")
+                    sleep(0.1)
                     self.flyWheelsOn()
-                    #If the the ball is too close, wait to spin up the flywheels
-                    if y < 100:
-                        sleep(0.5)
-                    #Drive forward until the ball is out of view for at least 0.5 seconds
+                    #if y < 100: sleep(0.5)
+
+                    #Drive forward until the ball is out of view, and has gone up the ramp
                     self.forward()
+                    aboutToCrashFlag = False
+
                     while x is not None:
                         u,x,y,width,height = self.getBlocks()
                         if self.isAboutToCrash():
-                            #Stop driving forward, and defer the avoidance to the
-                            #beginning of the loop
-                            self.stop()
-                            continue
-                    sleep(0.5)
-                    while 0: #opto switch
-                        pass
-                    
+                            #Defer wall avoidance to the beginning of the loop
+                            aboutToCrashFlag = True
+                            break
+                    if aboutToCrashFlag:
+                        self.flyWheelsOff()
+                        self.stop()
+                        continue
+
+                    #sleep(0.5)
+
+                    switch, startTime = self.getOptoSwitch(), time()
+                    while not o: #opto switch
+                        switch = self.getOptoSwitch()
+                        if self.isAboutToCrash():
+                            aboutToCrashFlag = True
+                            break
+                        elif time() > startTime+6:
+                            break
+                    if aboutToCrashFlag:
+                        self.flyWheelsOff()
+                        self.stop()
+                        continue
+
                     self.flyWheelsOff()
                     self.stop()
-                
+
                 elif x < 150: #If the ball is to the right, turn right
                     self.turnRight()
                 elif x > 260: #If the ball is to the left, turn left
                     self.turnLeft()
             else:
                 if random.uniform(0,10) < 0.5:
-                    flag = (flag+1)%2
-                if flag:    
+                    directionFlag = (directionFlag+1)%2
+                if directionFlag:
                     self.forward()
                 else:
-                    self.right()
+                    self.turnRight()
 
 
 def main():
+    """Testing CLI for the robot
+    """
     robot = Robot()
     atexit.register(robot.shutdown)
 
