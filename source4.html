@@ -1,0 +1,376 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+  <title></title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <style type="text/css">
+td.linenos { background-color: #f0f0f0; padding-right: 10px; }
+span.lineno { background-color: #f0f0f0; padding: 0 5px 0 5px; }
+pre { line-height: 125%; }
+body .hll { background-color: #ffffcc }
+body  { background: #f8f8f8; }
+body .c { color: #408080; font-style: italic } /* Comment */
+body .err { border: 1px solid #FF0000 } /* Error */
+body .k { color: #008000; font-weight: bold } /* Keyword */
+body .o { color: #666666 } /* Operator */
+body .ch { color: #408080; font-style: italic } /* Comment.Hashbang */
+body .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+body .cp { color: #BC7A00 } /* Comment.Preproc */
+body .cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
+body .c1 { color: #408080; font-style: italic } /* Comment.Single */
+body .cs { color: #408080; font-style: italic } /* Comment.Special */
+body .gd { color: #A00000 } /* Generic.Deleted */
+body .ge { font-style: italic } /* Generic.Emph */
+body .gr { color: #FF0000 } /* Generic.Error */
+body .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+body .gi { color: #00A000 } /* Generic.Inserted */
+body .go { color: #888888 } /* Generic.Output */
+body .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+body .gs { font-weight: bold } /* Generic.Strong */
+body .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+body .gt { color: #0044DD } /* Generic.Traceback */
+body .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+body .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+body .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+body .kp { color: #008000 } /* Keyword.Pseudo */
+body .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+body .kt { color: #B00040 } /* Keyword.Type */
+body .m { color: #666666 } /* Literal.Number */
+body .s { color: #BA2121 } /* Literal.String */
+body .na { color: #7D9029 } /* Name.Attribute */
+body .nb { color: #008000 } /* Name.Builtin */
+body .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+body .no { color: #880000 } /* Name.Constant */
+body .nd { color: #AA22FF } /* Name.Decorator */
+body .ni { color: #999999; font-weight: bold } /* Name.Entity */
+body .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+body .nf { color: #0000FF } /* Name.Function */
+body .nl { color: #A0A000 } /* Name.Label */
+body .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+body .nt { color: #008000; font-weight: bold } /* Name.Tag */
+body .nv { color: #19177C } /* Name.Variable */
+body .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+body .w { color: #bbbbbb } /* Text.Whitespace */
+body .mb { color: #666666 } /* Literal.Number.Bin */
+body .mf { color: #666666 } /* Literal.Number.Float */
+body .mh { color: #666666 } /* Literal.Number.Hex */
+body .mi { color: #666666 } /* Literal.Number.Integer */
+body .mo { color: #666666 } /* Literal.Number.Oct */
+body .sa { color: #BA2121 } /* Literal.String.Affix */
+body .sb { color: #BA2121 } /* Literal.String.Backtick */
+body .sc { color: #BA2121 } /* Literal.String.Char */
+body .dl { color: #BA2121 } /* Literal.String.Delimiter */
+body .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+body .s2 { color: #BA2121 } /* Literal.String.Double */
+body .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+body .sh { color: #BA2121 } /* Literal.String.Heredoc */
+body .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+body .sx { color: #008000 } /* Literal.String.Other */
+body .sr { color: #BB6688 } /* Literal.String.Regex */
+body .s1 { color: #BA2121 } /* Literal.String.Single */
+body .ss { color: #19177C } /* Literal.String.Symbol */
+body .bp { color: #008000 } /* Name.Builtin.Pseudo */
+body .fm { color: #0000FF } /* Name.Function.Magic */
+body .vc { color: #19177C } /* Name.Variable.Class */
+body .vg { color: #19177C } /* Name.Variable.Global */
+body .vi { color: #19177C } /* Name.Variable.Instance */
+body .vm { color: #19177C } /* Name.Variable.Magic */
+body .il { color: #666666 } /* Literal.Number.Integer.Long */
+
+  </style>
+</head>
+<body>
+<h2></h2>
+
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span><span class="p">,</span> <span class="n">time</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c1">#import RPi.GPIO as GPIO</span>
+<span class="c1">#GPIO.setmode(GPIO.BCM)</span>
+
+<span class="kn">import</span> <span class="nn">ESCD3in</span>
+<span class="kn">import</span> <span class="nn">VL53L1X</span>
+<span class="kn">import</span> <span class="nn">Diablo</span>
+
+<span class="kn">import</span> <span class="nn">pixy</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pixy</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="k">class</span> <span class="nc">Blocks</span> <span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+  <span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s2">&quot;m_signature&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;m_x&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;m_y&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;m_width&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;m_height&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;m_angle&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;m_index&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;m_age&quot;</span><span class="p">,</span> <span class="n">c_uint</span><span class="p">)</span> <span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">Robot</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialise the robot, by setting it up, and performing any other</span>
+<span class="sd">        necessary procedures&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an ESC, a motors &amp; a TOF object&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ESCs</span> <span class="o">=</span> <span class="n">ESCD3in</span><span class="o">.</span><span class="n">PairESCController</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span> <span class="o">=</span> <span class="n">Diablo</span><span class="o">.</span><span class="n">Diablo</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">i2cAddress</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">Init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">ResetEpo</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tof</span> <span class="o">=</span> <span class="n">VL53L1X</span><span class="o">.</span><span class="n">VL53L1X</span><span class="p">(</span><span class="n">i2c_bus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">i2c_address</span><span class="o">=</span><span class="mh">0x29</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tof</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="c1">#Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tof</span><span class="o">.</span><span class="n">start_ranging</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fully shutdown the robot, i.e. powering of the motors, the ESCs, the TOF&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ESCs</span><span class="o">.</span><span class="n">stopstop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tof</span><span class="o">.</span><span class="n">stop_ranging</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetEpoIgnore</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Process Safely Stopped&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">remoteControl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remote control the robot from the command line&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pynput.keyboard</span> <span class="kn">import</span> <span class="n">Key</span><span class="p">,</span> <span class="n">Listener</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">def</span> <span class="nf">on_press</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Key</span><span class="o">.</span><span class="n">down</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Key</span><span class="o">.</span><span class="n">up</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Key</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turnRight</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Key</span><span class="o">.</span><span class="n">left</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turnLeft</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Key</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOn</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOff</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Key</span><span class="o">.</span><span class="n">tab</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getDistance</span><span class="p">())</span>
+
+        <span class="k">def</span> <span class="nf">on_release</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Key</span><span class="o">.</span><span class="n">esc</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ESCs</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">with</span> <span class="n">Listener</span><span class="p">(</span><span class="n">on_press</span><span class="o">=</span><span class="n">on_press</span><span class="p">,</span><span class="n">on_release</span><span class="o">=</span><span class="n">on_release</span><span class="p">)</span> <span class="k">as</span> <span class="n">listener</span><span class="p">:</span>
+                <span class="n">listener</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">flyWheelsOn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duty</span><span class="o">=</span><span class="s2">&quot;1130&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the duty of the ESCs to a given value</span>
+<span class="sd">        Optional parameter 1: duty [string]; set the duty of both ESCs to this value&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ESCs</span><span class="o">.</span><span class="n">manual_drive</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">duty</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">flyWheelsOff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the duty of the ESCs to 0 - i.e. turn them off&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ESCs</span><span class="o">.</span><span class="n">manual_drive</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Drive the robot forwards&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Drive the robot backwards&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">turnRight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn the robot right&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">turnLeft</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn the robot left&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">SetMotor1</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stop the robot&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">motors</span><span class="o">.</span><span class="n">MotorsOff</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">getDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the distance from the TOF sensor to the nearest obstacle</span>
+<span class="sd">        Return 1: distance [int]; the distance to the nearest obstacle&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tof</span><span class="o">.</span><span class="n">get_distance</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">getOptoSwitch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the value of the opto switch in the chute, unimplemented, so always True</span>
+<span class="sd">        Return 1: value [boolean]; whether the opto switch is tripeed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">getBlocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get various information about the most prominent circle in the image</span>
+<span class="sd">        Return 1: centrex [int]; the x centre of the nearest circle</span>
+<span class="sd">        Return 2: centrey [int]; the y centre of the nearest circle</span>
+<span class="sd">        Return 3: blockWidth [int];</span>
+<span class="sd">        Return 4: blockHeight [int];</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="n">BlockArray</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">pixy</span><span class="o">.</span><span class="n">ccc_get_blocks</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">blocks</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+                <span class="n">centerx</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">m_x</span> <span class="o">+</span> <span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">m_width</span><span class="o">/</span><span class="mi">2</span>
+                <span class="n">centery</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">m_y</span> <span class="o">-</span> <span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">m_height</span><span class="o">/</span><span class="mi">2</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="p">,</span><span class="n">centerx</span><span class="p">,</span> <span class="n">centery</span><span class="p">,</span> <span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">m_width</span><span class="p">,</span> <span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">m_height</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">autonomousTest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Drive continuously in a circle, and collect any balls that are seen</span>
+<span class="sd">        whilst turning</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">width</span><span class="p">,</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBlocks</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">260</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">150</span><span class="p">:</span> <span class="c1">#If the ball is central</span>
+                    <span class="c1">#print(y)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+                    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOn</span><span class="p">()</span>
+                    <span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOff</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turnRight</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">isAboutToCrash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if the distance between a robot and a detected obstacle</span>
+<span class="sd">        is below a threshold</span>
+<span class="sd">        Return 1: answer [boolean]; is the robot about to crash&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDistance</span><span class="p">()</span><span class="o">&lt;</span><span class="n">threshold</span>
+
+    <span class="k">def</span> <span class="nf">avoidWall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn in a random (or specified) direction to avoid the wall,</span>
+<span class="sd">        then keep turning for another random period of time</span>
+<span class="sd">        Optional parameter 1: direction [int]; the direction in which to turn</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">direction</span>
+
+        <span class="k">while</span> <span class="n">isAboutToCrash</span><span class="p">(</span><span class="n">threshold</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turnRight</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turnLeft</span><span class="p">()</span>
+
+        <span class="n">latencyPeriod</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="n">latencyPeriod</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">autonomous</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Autonomously collect balls</span>
+<span class="sd">        Continuously drive forward, unless:</span>
+<span class="sd">         - you see a ball, in which case turn to pick it up</span>
+<span class="sd">         - you are too close to a wall, in case turn randomly to avoid it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">directionFlag</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#0: drive forwards, 1: turn right</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isAboutToCrash</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">avoidWall</span><span class="p">()</span>
+
+            <span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">width</span><span class="p">,</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBlocks</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">260</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">150</span><span class="p">:</span> <span class="c1">#If the ball is central, collect it</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+                    <span class="c1">#Spin up the flywheels, speed up by doing highest first</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOn</span><span class="p">(</span><span class="s2">&quot;2000&quot;</span><span class="p">)</span>
+                    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOn</span><span class="p">()</span>
+                    <span class="c1">#if y &lt; 100: sleep(0.5)</span>
+
+                    <span class="c1">#Drive forward until the ball is out of view, and has gone up the ramp</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+                    <span class="n">aboutToCrashFlag</span> <span class="o">=</span> <span class="bp">False</span>
+
+                    <span class="k">while</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">width</span><span class="p">,</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBlocks</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isAboutToCrash</span><span class="p">():</span>
+                            <span class="c1">#Defer wall avoidance to the beginning of the loop</span>
+                            <span class="n">aboutToCrashFlag</span> <span class="o">=</span> <span class="bp">True</span>
+                            <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">aboutToCrashFlag</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOff</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                        <span class="k">continue</span>
+
+                    <span class="c1">#sleep(0.5)</span>
+
+                    <span class="n">switch</span><span class="p">,</span> <span class="n">startTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOptoSwitch</span><span class="p">(),</span> <span class="n">time</span><span class="p">()</span>
+                    <span class="k">while</span> <span class="ow">not</span> <span class="n">o</span><span class="p">:</span> <span class="c1">#opto switch</span>
+                        <span class="n">switch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOptoSwitch</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isAboutToCrash</span><span class="p">():</span>
+                            <span class="n">aboutToCrashFlag</span> <span class="o">=</span> <span class="bp">True</span>
+                            <span class="k">break</span>
+                        <span class="k">elif</span> <span class="n">time</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">startTime</span><span class="o">+</span><span class="mi">5</span><span class="p">:</span>
+                            <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">aboutToCrashFlag</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOff</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                        <span class="k">continue</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flyWheelsOff</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+                <span class="k">elif</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">150</span><span class="p">:</span> <span class="c1">#If the ball is to the right, turn right</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">turnRight</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">260</span><span class="p">:</span> <span class="c1">#If the ball is to the left, turn left</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">turnLeft</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="n">directionFlag</span> <span class="o">=</span> <span class="p">(</span><span class="n">directionFlag</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">%</span><span class="mi">2</span>
+                <span class="k">if</span> <span class="n">directionFlag</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">turnRight</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Testing CLI for the robot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">robot</span> <span class="o">=</span> <span class="n">Robot</span><span class="p">()</span>
+    <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">shutdown</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;clear&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Remote control [r], Calibrate [c] Autonomous [a] or Exit [x]: &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="n">robot</span><span class="o">.</span><span class="n">remoteControl</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="o">==</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span>
+            <span class="n">robot</span><span class="o">.</span><span class="n">ESCs</span><span class="o">.</span><span class="n">calibrate</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">data</span> <span class="o">==</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span>
+            <span class="n">robot</span><span class="o">.</span><span class="n">autonomousOld</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">data</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
+            <span class="nb">exit</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">exit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</body>
+</html>
