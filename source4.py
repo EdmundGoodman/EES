@@ -37,6 +37,7 @@ class Robot:
     def setup(self):
         """Create an ESC, a motors & a TOF object"""
         self.ESCs = ESCD3in.PairESCController()
+        self.defaultFlywheelDuty = "1130"
 
         self.motors = Diablo.Diablo()
         self.motors.i2cAddress = 10
@@ -87,10 +88,15 @@ class Robot:
                 self.ESCs.stop()
                 return False
 
+        print("Waiting for remote control commands")
         with Listener(on_press=on_press,on_release=on_release) as listener:
                 listener.join()
 
-    def flyWheelsOn(self, duty="1130"):
+    def setDefaultFlywheelDuty(self, duty):
+        """Set the default duty of the flywheels"""
+        self.defaultFlywheelDuty = str(duty)
+
+    def flyWheelsOn(self, duty=self.defaultFlywheelDuty):
         """Set the duty of the ESCs to a given value
         Optional parameter 1: duty [string]; set the duty of both ESCs to this value"""
         self.ESCs.manual_drive(str(duty))
@@ -200,6 +206,7 @@ class Robot:
          - you see a ball, in which case turn to pick it up
          - you are too close to a wall, in case turn randomly to avoid it
         """
+        print("Starting autonomous collection")
         directionFlag = 0 #0: drive forwards, 1: turn right
         while True:
             if self.isAboutToCrash():
