@@ -39,8 +39,9 @@ class Robot:
         self.ESCs = ESCD3in.PairESCController()
         self.defaultFlywheelDuty = "1130"
 
-        self.motors = Diablo.Diablo()
-        self.motors.i2cAddress = 10
+        self.motors = Diablo3.Diablo()
+        #i2cdetect -y 1
+        self.motors.i2cAddress = 37
         self.motors.Init()
         self.motors.ResetEpo()
 
@@ -96,9 +97,11 @@ class Robot:
         """Set the default duty of the flywheels"""
         self.defaultFlywheelDuty = str(duty)
 
-    def flyWheelsOn(self, duty=self.defaultFlywheelDuty):
+    def flyWheelsOn(self, duty=None):
         """Set the duty of the ESCs to a given value
         Optional parameter 1: duty [string]; set the duty of both ESCs to this value"""
+        if duty is None:
+            duty = self.defaultFlywheelDuty
         self.ESCs.manual_drive(str(duty))
 
     def flyWheelsOff(self):
