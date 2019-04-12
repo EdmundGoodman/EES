@@ -10,12 +10,12 @@ import os
 #GPIO.setmode(GPIO.BCM)
 
 import ESCD3in
-import VL53L1X
-import Diablo3
+#import VL53L1X
+import Diablo #3 as Diablo
 
-import pixy
+#import pixy
 from ctypes import *
-from pixy import *
+#from pixy import *
 
 
 class Blocks (Structure):
@@ -39,23 +39,23 @@ class Robot:
         self.ESCs = ESCD3in.PairESCController()
         self.defaultFlywheelDuty = "1130"
 
-        self.motors = Diablo3.Diablo()
+        self.motors = Diablo.Diablo()
         #i2cdetect -y 1
-        self.motors.i2cAddress = 37
+        self.motors.i2cAddress = 0x25
         self.motors.Init()
         self.motors.ResetEpo()
 
-        self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
-        self.tof.open()
+        #self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
+        #self.tof.open()
         #Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
-        self.tof.start_ranging(1)
+        #self.tof.start_ranging(1)
 
 
     def shutdown(self):
         """Fully shutdown the robot, i.e. powering of the motors, the ESCs, the TOF"""
         self.stop()
         self.ESCs.stopstop()
-        self.tof.stop_ranging()
+        #self.tof.stop_ranging()
         self.motors.SetEpoIgnore(True)
         print("Process Safely Stopped")
 
@@ -135,7 +135,7 @@ class Robot:
     def getDistance(self):
         """Get the distance from the TOF sensor to the nearest obstacle
         Return 1: distance [int]; the distance to the nearest obstacle"""
-        return self.tof.get_distance()
+        return 100 #self.tof.get_distance()
 
     def getOptoSwitch(self):
         """Get the value of the opto switch in the chute, unimplemented, so always True
@@ -281,7 +281,7 @@ def main():
 
     while True:
         os.system('clear')
-        data = input("Remote control [r], Calibrate [c] Autonomous [a] or Exit [x]: ").lower()
+        data = raw_input("Remote control [r], Calibrate [c] Autonomous [a] or Exit [x]: ").lower()
         if data == "r":
             robot.remoteControl()
         if data == "c":
