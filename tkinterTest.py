@@ -80,7 +80,8 @@ class App:
         try:
             while not self.stopEvent.is_set():
                 #Get the distance
-                self.distance["text"] = "Distance:\n{}".format(self.robot.getDistance())
+                pass
+                #self.distance["text"] = "Distance:\n{}".format(self.robot.getDistance())
 
         except RuntimeError as e:
             print("Runtime error: {}".format(e))
