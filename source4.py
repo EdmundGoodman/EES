@@ -11,7 +11,7 @@ import os
 
 import ESCD3in
 import VL53L1X
-import Diablo
+import Diablo3
 
 import pixy
 from ctypes import *
