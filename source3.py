@@ -52,16 +52,16 @@ class Robot:
         GPIO.setup(27, GPIO.OUT, initial=1)
         self.ESCs = ESCD3in.PairESCController()
 
-        self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
-        self.tof.open()
-        self.tof.start_ranging(1) # Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
+        #self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
+        #self.tof.open()
+        #self.tof.start_ranging(1) # Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
 
     def shutdown(self):
         """Fully shutdown the robot, i.e. powering of the motors, the ESCs,
         the TOF, and clean up to GPIO pins"""
         self.stop()
         self.ESCs.stopstop()
-        self.tof.stop_ranging()
+        #self.tof.stop_ranging()
         GPIO.cleanup()
         print("Process Safely Stopped")
 
@@ -107,7 +107,7 @@ class Robot:
         for p in lowPins:
             GPIO.output(p, GPIO.LOW)
 
-    def flyWheelsOn(self, duty="1130"):
+    def flyWheelsOn(self, duty="1060"):
         """Set the duty of the ESCs to a given value
         Optional parameter 1: duty [string]; set the duty of both ESCs to this value"""
         self.ESCs.manual_drive(str(duty))
@@ -143,7 +143,7 @@ class Robot:
     def getDistance(self):
         """Get the distance from the TOF sensor to the nearest obstacle
         Return 1: distance [int]; the distance to the nearest obstacle"""
-        return self.tof.get_distance()
+        return 100 # self.tof.get_distance()
 
     def getOptoSwitch(self):
         """Get the value of the opto switch in the chute, unimplemented, so always True
