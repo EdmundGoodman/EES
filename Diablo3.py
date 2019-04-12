@@ -77,7 +77,7 @@ COMMAND_VALUE_ON        = 1     # I2C value representing on
 COMMAND_VALUE_OFF       = 0     # I2C value representing off
 
 
-def ScanForDiablo(busNumber = 1):
+def ScanForDiablo(busNumber=1):
     """
 ScanForDiablo([busNumber])
 
