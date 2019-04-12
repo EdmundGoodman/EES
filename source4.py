@@ -6,16 +6,16 @@ import cv2
 import io
 import os
 
-#import RPi.GPIO as GPIO
-#GPIO.setmode(GPIO.BCM)
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
 
 import ESCD3in
-#import VL53L1X
-import Diablo #3 as Diablo
+import VL53L1X
+import Diablo3 as Diablo
 
-#import pixy
+import pixy
 from ctypes import *
-#from pixy import *
+from pixy import *
 
 
 class Blocks (Structure):
@@ -36,26 +36,28 @@ class Robot:
 
     def setup(self):
         """Create an ESC, a motors & a TOF object"""
+        GPIO.setup(35,GPIO.OUT,initial=0)
         self.ESCs = ESCD3in.PairESCController()
         self.defaultFlywheelDuty = "1130"
 
         self.motors = Diablo.Diablo()
-        #i2cdetect -y 1
+        if False:
+            print(Diablo.ScanForDiablo)
         self.motors.i2cAddress = 0x25
         self.motors.Init()
         self.motors.ResetEpo()
 
-        #self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
-        #self.tof.open()
+        self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
+        self.tof.open()
         #Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
-        #self.tof.start_ranging(1)
+        self.tof.start_ranging(1)
 
 
     def shutdown(self):
         """Fully shutdown the robot, i.e. powering of the motors, the ESCs, the TOF"""
         self.stop()
         self.ESCs.stopstop()
-        #self.tof.stop_ranging()
+        self.tof.stop_ranging()
         self.motors.SetEpoIgnore(True)
         print("Process Safely Stopped")
 
@@ -110,23 +112,21 @@ class Robot:
 
     def forward(self):
         """Drive the robot forwards"""
-        self.motors.SetMotor1(-1)
-        self.motors.SetMotor1(-1)
+        self.motors.SetMotors(-1)
 
     def backward(self):
         """Drive the robot backwards"""
-        self.motors.SetMotor1(1)
-        self.motors.SetMotor1(1)
+        self.motors.SetMotors(1)
 
     def turnRight(self):
         """Turn the robot right"""
         self.motors.SetMotor1(-1)
-        self.motors.SetMotor1(1)
+        self.motors.SetMotor2(1)
 
     def turnLeft(self):
         """Turn the robot left"""
         self.motors.SetMotor1(1)
-        self.motors.SetMotor1(-1)
+        self.motors.SetMotor2(-1)
 
     def stop(self):
         """Stop the robot"""
@@ -135,7 +135,7 @@ class Robot:
     def getDistance(self):
         """Get the distance from the TOF sensor to the nearest obstacle
         Return 1: distance [int]; the distance to the nearest obstacle"""
-        return 100 #self.tof.get_distance()
+        return self.tof.get_distance()
 
     def getOptoSwitch(self):
         """Get the value of the opto switch in the chute, unimplemented, so always True

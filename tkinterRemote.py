@@ -1,4 +1,4 @@
-from source3 import *
+from source4 import *
 
 import tkinter as tk
 from tkinter.ttk import Radiobutton
@@ -80,8 +80,7 @@ class App:
         try:
             while not self.stopEvent.is_set():
                 #Get the distance
-                pass
-                #self.distance["text"] = "Distance:\n{}".format(self.robot.getDistance())
+                self.distance["text"] = "Distance:\n{}".format(self.robot.getDistance())
 
         except RuntimeError as e:
             print("Runtime error: {}".format(e))

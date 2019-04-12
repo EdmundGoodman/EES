@@ -56,7 +56,6 @@ class PairESCController:
                 print("{} seconds till next process".format(13-i))
             sleep(1)
         self.stop()
-        self.calibrated = True
         sleep(2)
 
         #print("Arming ESC now")
@@ -65,6 +64,29 @@ class PairESCController:
         sleep(10) # You can change this to any other function you want
         print("Motors spinning down, and stopping")
         self.stop()
+
+        self.calibrated = True
+
+    def auto_calibrate(self):
+        """Calibrate the ESCs to allow them to drive automatically
+        """
+        self.stop()
+        GPIO.output(35, GPIO.HIGH)
+        sleep(0.5)
+
+        self.manual_drive(self.maxValue, debug=False)
+        GPIO.output(35, GPIO.LOW)
+        sleep(1.5)
+
+        self.manual_drive(self.minValue, debug=False)
+        sleep(13)
+        self.stop()
+        sleep(2)
+
+        self.manual_drive(self.minValue, debug=False)
+        sleep(10) # You can change this to any other function you want
+        self.stop()
+        self.calibrated = True
 
     def stop(self):
         """Stop the ESCs"""

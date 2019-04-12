@@ -1,4 +1,4 @@
-import Diablo#3 as Diablo
+import Diablo
 import time
 
 print(Diablo.ScanForDiablo)
