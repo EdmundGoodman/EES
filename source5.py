@@ -11,7 +11,6 @@ GPIO.setmode(GPIO.BCM)
 
 import ESCD3in
 import VL53L1X
-import Diablo3 as Diablo
 
 import pixy
 from ctypes import *
@@ -36,29 +35,28 @@ class Robot:
         self.setup()
 
     def setup(self):
-        """Create an ESC, a motors & a TOF object"""
-        GPIO.setup(35,GPIO.OUT,initial=0)
-        self.ESCs = ESCD3in.PairESCController()
-        self.defaultFlywheelDuty = "1130"
+        """Initialise all the GPIO pins, and create an ESC & a TOF object"""
+        for i in range(13,20):
+            GPIO.setup(i,GPIO.OUT,initial=1)
+        GPIO.setup(8,GPIO.OUT,initial=1)
+        GPIO.setup(11, GPIO.OUT,initial=1)
+        GPIO.setup(26, GPIO.OUT, initial=1)
+        GPIO.setup(27, GPIO.OUT, initial=1)
 
-        self.motors = Diablo.Diablo()
-        if False:
-            print(Diablo.ScanForDiablo)
-        self.motors.i2cAddress = 0x25
-        self.motors.Init()
-        self.motors.ResetEpo()
+        self.ESCs = ESCD3in.PairESCController()
+        self.defaultFlywheelDuty = "1060"
 
         self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
         self.tof.open()
-        #Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
-        self.tof.start_ranging(1)
+        self.tof.start_ranging(1) # Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
 
     def shutdown(self):
-        """Fully shutdown the robot, i.e. powering off the motors, the ESCs,
-        and the TOF"""
+        """Fully shutdown the robot, i.e. powering of the motors, the ESCs,
+        the TOF, and clean up to GPIO pins"""
         self.stop()
         self.ESCs.stopstop()
         self.tof.stop_ranging()
+        GPIO.cleanup()
         print("Process Safely Stopped")
 
     def remoteControl(self):
@@ -94,6 +92,15 @@ class Robot:
         with Listener(on_press=on_press,on_release=on_release) as listener:
                 listener.join()
 
+    def toggleGPIOPins(self, highPins, lowPins):
+        """Toggle the given GPIO pins
+        Parameter 1: highPins [list]; set pins in this list to a high logical value
+        Parameter 2: lowPins [list]; set pins in this list to low logical value"""
+        for p in highPins:
+            GPIO.output(p, GPIO.HIGH)
+        for p in lowPins:
+            GPIO.output(p, GPIO.LOW)
+
     def setDefaultFlywheelDuty(self, duty):
         """Set the default duty of the flywheels"""
         self.defaultFlywheelDuty = str(duty)
@@ -105,32 +112,33 @@ class Robot:
             duty = self.defaultFlywheelDuty
         self.ESCs.manual_drive(str(duty))
 
-
     def flyWheelsOff(self):
         """Set the duty of the ESCs to 0 - i.e. turn them off"""
         self.ESCs.manual_drive("0")
 
-    def forward(self):
-        """Drive the robot forwards"""
-        self.motors.SetMotors(-1)
-
     def backward(self):
         """Drive the robot backwards"""
-        self.motors.SetMotors(1)
+        self.stop()
+        self.toggleGPIOPins(highPins=[26,27,8,11], lowPins=[16,13])
+
+    def forward(self):
+        """Drive the robot forwards"""
+        self.stop()
+        self.toggleGPIOPins(highPins=[], lowPins=[26,27,8,11,16,13])
 
     def turnRight(self):
         """Turn the robot right"""
-        self.motors.SetMotor1(-1)
-        self.motors.SetMotor2(1)
+        self.stop()
+        self.toggleGPIOPins(highPins=[8,11], lowPins=[26,27,16,13])
 
     def turnLeft(self):
         """Turn the robot left"""
-        self.motors.SetMotor1(1)
-        self.motors.SetMotor2(-1)
+        self.stop()
+        self.toggleGPIOPins(highPins=[26,27], lowPins=[8,11,16,13])
 
     def stop(self):
         """Stop the robot"""
-        self.motors.SetMotors(0)
+        self.toggleGPIOPins(highPins=list(range(13,20))+[8,11,26,27], lowPins=[])
 
     def getDistance(self):
         """Get the distance from the TOF sensor to the nearest obstacle
