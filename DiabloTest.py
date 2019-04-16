@@ -1,7 +1,4 @@
-if 1:
-    import Diablo3 as Diablo
-else:
-    import Diablo
+import Diablo
 import time
 
 print(Diablo.ScanForDiablo())
