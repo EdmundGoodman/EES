@@ -1,3 +1,11 @@
+#from pivideostream2 import PiVideoStream
+#from picamera.array import PiRGBArray
+#from picamera import PiCamera
+#from imutils.video import FPS
+#from PIL import Image
+#import numpy as np
+#import imutils
+
 from time import sleep, time
 import random
 import atexit
@@ -11,11 +19,11 @@ GPIO.setmode(GPIO.BCM)
 
 import ESCD3in
 import VL53L1X
-import Diablo3 as Diablo
 
 import pixy
 from ctypes import *
 from pixy import *
+
 
 
 class Blocks (Structure):
@@ -35,30 +43,26 @@ class Robot:
         self.setup()
 
     def setup(self):
-        """Create an ESC, a motors & a TOF object"""
-        GPIO.setup(35,GPIO.OUT,initial=0)
+        """Initialise all the GPIO pins, and create an ESC & a TOF object"""
+        for i in range(13,20):
+            GPIO.setup(i,GPIO.OUT,initial=1)
+        GPIO.setup(8,GPIO.OUT,initial=1)
+        GPIO.setup(11, GPIO.OUT,initial=1)
+        GPIO.setup(26, GPIO.OUT, initial=1)
+        GPIO.setup(27, GPIO.OUT, initial=1)
         self.ESCs = ESCD3in.PairESCController()
-        self.defaultFlywheelDuty = "1130"
 
-        self.motors = Diablo.Diablo()
-        if False:
-            print(Diablo.ScanForDiablo)
-        self.motors.i2cAddress = 0x25
-        self.motors.Init()
-        self.motors.ResetEpo()
-
-        self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
-        self.tof.open()
-        #Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
-        self.tof.start_ranging(1)
-
+        #self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
+        #self.tof.open()
+        #self.tof.start_ranging(1) # Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
 
     def shutdown(self):
-        """Fully shutdown the robot, i.e. powering of the motors, the ESCs, the TOF"""
+        """Fully shutdown the robot, i.e. powering of the motors, the ESCs,
+        the TOF, and clean up to GPIO pins"""
         self.stop()
         self.ESCs.stopstop()
-        self.tof.stop_ranging()
-        self.motors.SetEpoIgnore(True)
+        #self.tof.stop_ranging()
+        GPIO.cleanup()
         print("Process Safely Stopped")
 
     def remoteControl(self):
@@ -91,51 +95,55 @@ class Robot:
                 self.ESCs.stop()
                 return False
 
-        print("Waiting for remote control commands")
         with Listener(on_press=on_press,on_release=on_release) as listener:
                 listener.join()
 
-    def setDefaultFlywheelDuty(self, duty):
-        """Set the default duty of the flywheels"""
-        self.defaultFlywheelDuty = str(duty)
+    def toggleGPIOPins(self, highPins, lowPins):
+        """Toggle the given GPIO pins
+        Parameter 1: highPins [list]; set pins in this list to a high logical value
+        Parameter 2: lowPins [list]; set pins in this list to low logical value"""
+        for p in highPins:
+            GPIO.output(p, GPIO.HIGH)
+        for p in lowPins:
+            GPIO.output(p, GPIO.LOW)
 
-    def flyWheelsOn(self, duty=None):
+    def flyWheelsOn(self, duty="1060"):
         """Set the duty of the ESCs to a given value
         Optional parameter 1: duty [string]; set the duty of both ESCs to this value"""
-        if duty is None:
-            duty = self.defaultFlywheelDuty
         self.ESCs.manual_drive(str(duty))
 
     def flyWheelsOff(self):
         """Set the duty of the ESCs to 0 - i.e. turn them off"""
         self.ESCs.manual_drive("0")
 
-    def forward(self):
-        """Drive the robot forwards"""
-        self.motors.SetMotors(-1)
-
     def backward(self):
         """Drive the robot backwards"""
-        self.motors.SetMotors(1)
+        self.stop()
+        self.toggleGPIOPins(highPins=[26,27,8,11], lowPins=[16,13])
+
+    def forward(self):
+        """Drive the robot forwards"""
+        self.stop()
+        self.toggleGPIOPins(highPins=[], lowPins=[26,27,8,11,16,13])
 
     def turnRight(self):
         """Turn the robot right"""
-        self.motors.SetMotor1(-1)
-        self.motors.SetMotor2(1)
+        self.stop()
+        self.toggleGPIOPins(highPins=[8,11], lowPins=[26,27,16,13])
 
     def turnLeft(self):
         """Turn the robot left"""
-        self.motors.SetMotor1(1)
-        self.motors.SetMotor2(-1)
+        self.stop()
+        self.toggleGPIOPins(highPins=[26,27], lowPins=[8,11,16,13])
 
     def stop(self):
         """Stop the robot"""
-        self.motors.MotorsOff()
+        self.toggleGPIOPins(highPins=list(range(13,20))+[8,11,26,27], lowPins=[])
 
     def getDistance(self):
         """Get the distance from the TOF sensor to the nearest obstacle
         Return 1: distance [int]; the distance to the nearest obstacle"""
-        return self.tof.get_distance()
+        return 100 # self.tof.get_distance()
 
     def getOptoSwitch(self):
         """Get the value of the opto switch in the chute, unimplemented, so always True
@@ -184,7 +192,7 @@ class Robot:
         Return 1: answer [boolean]; is the robot about to crash"""
         return self.getDistance()<threshold
 
-    def avoidWall(self, direction=None, threshold=1000):
+    def avoidWall(self, direction=None):
         """Turn in a random (or specified) direction to avoid the wall,
         then keep turning for another random period of time
         Optional parameter 1: direction [int]; the direction in which to turn
@@ -192,7 +200,7 @@ class Robot:
         self.stop()
         direction = random.choice([0,1]) if direction is None else direction
 
-        while isAboutToCrash(threshold):
+        while isAboutToCrash():
             if direction == 0:
                 self.turnRight()
             else:
@@ -209,7 +217,6 @@ class Robot:
          - you see a ball, in which case turn to pick it up
          - you are too close to a wall, in case turn randomly to avoid it
         """
-        print("Starting autonomous collection")
         directionFlag = 0 #0: drive forwards, 1: turn right
         while True:
             if self.isAboutToCrash():
@@ -250,7 +257,7 @@ class Robot:
                         if self.isAboutToCrash():
                             aboutToCrashFlag = True
                             break
-                        elif time() > startTime+5:
+                        elif time() > startTime+6:
                             break
                     if aboutToCrashFlag:
                         self.flyWheelsOff()
