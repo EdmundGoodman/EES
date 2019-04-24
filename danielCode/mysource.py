@@ -6,7 +6,7 @@ import cv2
 import io
 import os
 import Diablo_py3 as Diablo
-import xbox
+
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
@@ -44,11 +44,10 @@ class Robot:
         self.DIABLO.SetEnabled(True)
         self.ESCs = ESCD3in.PairESCController()
         self.defaultFlywheelDuty = "1060"
-        pixy.init()
-        pixy.change_prog("color_connected_components")
+
         self.tof = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
         self.tof.open()
-        self.tof.start_ranging(3) # Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
+        self.tof.start_ranging(1) # Start ranging, 1 = Short Range, 2 = Medium Range, 3 = Long Range
 
     def shutdown(self):
         """Fully shutdown the robot, i.e. powering of the motors, the ESCs,
@@ -68,7 +67,7 @@ class Robot:
             if key == Key.down:
                 self.backward(0.8)
             if key == Key.up:
-                self.forward(1,0) #meant to be 0.8,0.7
+                self.forward(0.8)
             if key == Key.right:
                 self.turnRight(0.5)
             if key == Key.left:
@@ -113,6 +112,7 @@ class Robot:
 
     def backward(self,L,R = None):
         """Drive the robot backwards"""
+        self.stop()
         if R is not None:
             self.forward(-L,-R)
         else:
@@ -120,6 +120,7 @@ class Robot:
 
     def forward(self,L,R = None):
         """Drive the robot forwards"""
+        self.stop()
         if R is not None:
             self.DIABLO.SetMotor1(-R)
             self.DIABLO.SetMotor2(-L)
@@ -130,9 +131,12 @@ class Robot:
                 self.forward(L,L/1.04)
     def turnRight(self,P):
         """Turn the robot right"""
+        self.stop()
         self.forward(P,-P)
 
     def turnLeft(self,P):
+        """Turn the robot left"""
+        self.stop()
         self.forward(-P,P)
 
     def stop(self):
@@ -159,9 +163,7 @@ class Robot:
             for index in range (0, count):
                 centerx = blocks[index].m_x + blocks[index].m_width/2
                 centery = blocks[index].m_y - blocks[index].m_height/2
-                print(blocks[index].m_width)
-                if blocks[index].m_width < 100:
-                    return 1,centerx, centery, blocks[index].m_width, blocks[index].m_height
+            return 1,centerx, centery, blocks[index].m_width, blocks[index].m_height
         return None,None,None,None,None
 
     def getButtonPressed(self):
@@ -170,174 +172,38 @@ class Robot:
             return True
         return False
 
-    def getBall(self,x):
-        print("seen a ball")
-        if x > 210:
-            pass
-            '''self.turnRight(0.4)
-            sleep(0.8)
-            self.stop()'''
-        elif x < 180:
-            pass
-            '''self.turnLeft(0.4)
-            sleep(0.8)
-            self.stop()'''
-        print("ball is centred")
-        #print(y)
-        self.stop()
-        self.flyWheelsOn()
-        sleep(1)
-        self.forward(0.8,0.7)
-        self.drive()
-        self.flyWheelsOff()
-        self.stop()
-
     def autonomousTest(self):
-        timestarted = time()
-        self.forward(random.uniform(0.4,0.8),random.uniform(0.4,0.8))
-        timeto = random.randint(2,10)
-        count = 0
-        startturn = time() - 10
-        while self.getButtonPressed() == False:
-            u,x,y,width,height = self.getBlocks()
-            if x is not None:
-                self.getBall(x)
-                timestarted = -10000
-            dis = self.getDistance()
-            if dis < 1100:
-                count += 1
-            else:
-                count = 0
-            if count > 20:
-                self.flyWheelsOff()
-                self.backward(0.8,0.75)
-                sleep(0.8)
-                self.turnRight(0.7)
-                sleep(random.uniform(1.5,2.5))
-                self.stop()
-                self.flyWheelsOn()
-                self.forward(0.8,0.75)
-                sleep(random.uniform(3,6))
-                self.stop()
-                self.flyWheelsOff()
-                timestarted = -10000
-            if time() - timestarted > timeto:
-                timestarted = time()
-                option = random.randint(1,3)
-                if option == 1:
-                    self.forward(0.9,0.85)
-                if option == 2:
-                    self.forward(0.9,0.6)
-                if option == 3:
-                    self.forward(0.7,0.9)
-                timeto = random.randint(2,10)
-            if time()-startturn > 6 and random.randint(1,3) == 2:
-                print("Activated base turn")
-                self.autonomousBaseTurn(True)
-                startturn = time()
-                timestarted = -10000
-
-
-
-    def forBack(self):
-        while self.getButtonPressed() == True:
-            pass
-        count = 0
-        while self.getButtonPressed() == False:
-            self.flyWheelsOn()
-            self.forward(0.8,0.7)
-            self.drivewall()
-            if self.getButtonPressed():
-                self.stop()
-                return
-            if count%2 == 0:
-                self.forward(1,0)
-                sleep(2.8)
-            else:
-                self.forward(0,1)
-                sleep(2)
-            self.stop()
-            sleep(1)
-            count += 1
-        self.stop()
-        self.flyWheelsOff()
-
-    def drivewall(self):
-        count = 0
-        while True:
-            dis = self.getDistance()
-            if dis < 1100:
-                count += 1
-            else:
-                count = 0
-            if count > 20:
-                self.stop()
-                sleep(1)
-                return
-            if self.getButtonPressed():
-                self.stop()
-                self.flyWheelsOff()
-                return
-
-    def drive(self):
-        count = 0
-        for i in range(70):
-            dis = self.getDistance()
-            if dis < 550:
-                count += 1
-            else:
-                count = 0
-            if count > 4:
-
-                self.flyWheelsOff()
-                self.backward(0.8,0.75)
-                sleep(0.8)
-                self.turnRight(0.7)
-                sleep(random.uniform(1.5,2.5))
-                self.flyWheelsOn()
-                self.forward(0.8,0.75)
-                sleep(random.uniform(3,6))
-                self.stop()
-                self.flyWheelsOff()
-
-                return
-            sleep(0.01)
-        self.stop()
-        return
-
-
-
-    def autonomousBaseTurn(self,limited = False):
         """Drive continuously in a circle, and collect any balls that are seen
         whilst turning
         """
         '''while True:
             if self.getButtonPressed():
                 break'''
-        self.turnRight(0.6)
-        start = time()
-        end = random.uniform(3,5)
         while True:
             u,x,y,width,height = self.getBlocks()
             if x is not None:
-                if x < 260 and x > 150:
-                    print("ball is centred")
-                    self.stop()
-                    self.flyWheelsOn()
-                    sleep(1)
-                    self.forward(0.8,0.7)
-                    self.drive()
-                    self.flyWheelsOff()
-                    self.stop()
-                    sleep(1)
-                    self.turnRight(0.6)
+                print("seen a ball")
+                if x > 260:
+                    robot.turnRight()
+                else:
+                    robot.turnLeft()
+                while True:
+                    start = time.time()
+                    if x < 260 and x > 150:
+                        print("ball is centred")
+                        #print(y)
+                        self.stop()
+                        self.forward()
+                        sleep(0.5)
+                        self.flyWheelsOn()
+                        sleep(2)
+                        self.flyWheelsOff()
+                        self.stop()
+                    if time.time() - start > 10:
+                        self.stop()
+                        break
             else:
-                self.turnRight(0.6)
-            if self.getButtonPressed() == True:
-                return
-            if limited:
-                if time() - start > end:
-                    return
+                self.stop()
 
     def isAboutToCrash(self, threshold=1000):
         """Check if the distance between a robot and a detected obstacle
@@ -434,103 +300,14 @@ class Robot:
                     self.turnRight()
 
 
-    def buttonControll(self):
-        joy = xbox.Joystick()
-        self.forward(0.5,0.5)
-        sleep(0.4)
-        self.stop()#
-        #self.ESCs.calibrate()
-        self.forward(0.5,0.5)
-        sleep(0.4)
-        self.stop()
-
-        while True:
-            while self.getButtonPressed() == True:
-                pass
-            sleep(0.5)
-            ad = 0
-            while self.getButtonPressed() == False:
-
-                if joy.connected():
-                    self.forward(joy.leftY(),joy.rightY())
-                    if joy.A() and ad == 0:
-                        ad = 1
-                        self.flyWheelsOn()
-                        sleep(0.5)
-                    if joy.A() and ad == 1:
-                        self.flyWheelsOff()
-                        ad = 0
-                        sleep(0.5)
-                else:
-                    self.stop()
-                    self.flyWheelsOff()
-            sleep(0.5)
-
-            print("Button pushed")
-            while self.getButtonPressed() == True:
-                pass
-            sleep(0.5)
-
-            print("button let go")
-            start = time()
-            activated = 0
-            while self.getButtonPressed() == False:
-                if time() - start > 5:
-                    self.autonomousTest()
-                    self.stop()
-                    self.flyWheelsOff()
-                    activated = 1
-                    break
-            sleep(0.5)
-
-            if activated == 1:
-                continue
-            while self.getButtonPressed() == True:
-                pass
-            sleep(0.5)
-
-            print("button let go")
-            start = time()
-            while self.getButtonPressed() == False:
-                if time() - start > 5:
-                    self.autonomousBaseTurn()
-                    self.stop()
-                    self.flyWheelsOff()
-                    activated = 1
-                    break
-            sleep(0.5)
-            if activated == 1:
-                continue
-            while self.getButtonPressed() == True:
-                pass
-            sleep(0.5)
-
-            print("button let go")
-            start = time()
-            while self.getButtonPressed() == False:
-                if time() - start > 5:
-                    self.forBack()
-                    self.stop()
-                    self.flyWheelsOff()
-                    activated = 1
-                    break
-            if activated == 1:
-                continue
-            sleep(0.5)
-            print("button pressed")
-            while self.getButtonPressed() == True:
-                pass
-            sleep(0.5)
-            self.ESCs.calibrate()
-
 def main():
     """Testing CLI for the robot
     """
     robot = Robot()
     atexit.register(robot.shutdown)
+
     while True:
         os.system('clear')
-        robot.buttonControll()
         data = input("Remote control [r], Calibrate [c] Autonomous [a] or Exit [x]: ").lower()
         if data == "r":
             robot.remoteControl()
@@ -538,11 +315,10 @@ def main():
             robot.ESCs.calibrate()
         elif data == "a":
             robot.autonomousTest()
-        elif data == "b":
-            robot.buttonControll()
         elif data == "x":
             exit()
         else:
             pass
 
-main()
+if __name__ == "__main__":
+    exit(main())
